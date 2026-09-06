@@ -4,3 +4,4 @@ version = '0.0.1'
 description = 'fba AI Buddy 插件的前端实现'
 author = 'wu-clan'
 tags = ['ai', 'agent', 'mcp']
+depends_on = ['config', 's3']
