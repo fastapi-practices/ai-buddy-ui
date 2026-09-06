@@ -1,6 +1,6 @@
 [plugin]
 summary = 'AI Buddy UI'
 version = '0.0.1'
-description = '为 AI Buddy 提供后台管理，包括供应商、模型、默认助手模型、快捷短语、助手、MCP、知识库、技能和搜索密钥'
+description = 'fba AI Buddy 插件的前端实现'
 author = 'wu-clan'
 tags = ['ai', 'agent', 'mcp']
