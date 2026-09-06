@@ -9,7 +9,7 @@ export const querySkillSchema: VbenFormSchema[] = [
   {
     component: 'Input',
     fieldName: 'name',
-    label: $t('ai_buddy.skillManage.name'),
+    label: $t('ai-buddy.skillManage.name'),
   },
 ];
 
@@ -25,18 +25,18 @@ export function useSkillColumns(
     },
     {
       field: 'name',
-      title: $t('ai_buddy.skillManage.name'),
+      title: $t('ai-buddy.skillManage.name'),
       width: 220,
       align: 'left',
     },
     {
       field: 'description',
-      title: $t('ai_buddy.skillManage.description'),
+      title: $t('ai-buddy.skillManage.description'),
       align: 'left',
     },
     {
       field: 'object_key',
-      title: $t('ai_buddy.skillManage.objectKey'),
+      title: $t('ai-buddy.skillManage.objectKey'),
       width: 260,
       align: 'left',
     },
@@ -54,7 +54,7 @@ export function useSkillColumns(
       cellRender: {
         attrs: {
           nameField: 'name',
-          nameTitle: $t('ai_buddy.skill'),
+          nameTitle: $t('ai-buddy.skill'),
           onClick: onActionClick,
         },
         name: 'CellOperation',

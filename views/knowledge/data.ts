@@ -9,7 +9,7 @@ export const queryKnowledgeSchema: VbenFormSchema[] = [
   {
     component: 'Input',
     fieldName: 'title',
-    label: $t('ai_buddy.knowledgeManage.title'),
+    label: $t('ai-buddy.knowledgeManage.title'),
   },
 ];
 
@@ -25,18 +25,18 @@ export function useKnowledgeColumns(
     },
     {
       field: 'title',
-      title: $t('ai_buddy.knowledgeManage.title'),
+      title: $t('ai-buddy.knowledgeManage.title'),
       width: 220,
       align: 'left',
     },
     {
       field: 'source',
-      title: $t('ai_buddy.knowledgeManage.source'),
+      title: $t('ai-buddy.knowledgeManage.source'),
       align: 'left',
     },
     {
       field: 'object_key',
-      title: $t('ai_buddy.knowledgeManage.objectKey'),
+      title: $t('ai-buddy.knowledgeManage.objectKey'),
       width: 260,
       align: 'left',
     },
@@ -54,7 +54,7 @@ export function useKnowledgeColumns(
       cellRender: {
         attrs: {
           nameField: 'title',
-          nameTitle: $t('ai_buddy.knowledge'),
+          nameTitle: $t('ai-buddy.knowledge'),
           onClick: onActionClick,
         },
         name: 'CellOperation',

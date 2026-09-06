@@ -22,7 +22,7 @@ export const queryAssistantSchema: VbenFormSchema[] = [
   {
     component: 'Input',
     fieldName: 'name',
-    label: $t('ai_buddy.assistantManage.name'),
+    label: $t('ai-buddy.assistantManage.name'),
   },
   {
     component: 'Select',
@@ -31,7 +31,7 @@ export const queryAssistantSchema: VbenFormSchema[] = [
       options: assistantCategoryOptions,
     },
     fieldName: 'category',
-    label: $t('ai_buddy.assistantManage.category'),
+    label: $t('ai-buddy.assistantManage.category'),
   },
 ];
 
@@ -47,13 +47,13 @@ export function useAssistantColumns(
     },
     {
       field: 'name',
-      title: $t('ai_buddy.assistantManage.name'),
+      title: $t('ai-buddy.assistantManage.name'),
       minWidth: 180,
       align: 'left',
     },
     {
       field: 'category',
-      title: $t('ai_buddy.assistantManage.category'),
+      title: $t('ai-buddy.assistantManage.category'),
       width: 140,
       align: 'left',
       formatter: ({ cellValue }) =>
@@ -62,13 +62,13 @@ export function useAssistantColumns(
     },
     {
       field: 'description',
-      title: $t('ai_buddy.assistantManage.description'),
+      title: $t('ai-buddy.assistantManage.description'),
       width: 380,
       align: 'left',
     },
     {
       field: 'sort',
-      title: $t('ai_buddy.assistantManage.sort'),
+      title: $t('ai-buddy.assistantManage.sort'),
       width: 80,
     },
     {
@@ -85,7 +85,7 @@ export function useAssistantColumns(
       cellRender: {
         attrs: {
           nameField: 'name',
-          nameTitle: $t('ai_buddy.assistant'),
+          nameTitle: $t('ai-buddy.assistant'),
           onClick: onActionClick,
         },
         name: 'CellOperation',
@@ -99,7 +99,7 @@ export const assistantSchema: VbenFormSchema[] = [
   {
     component: 'Input',
     fieldName: 'name',
-    label: $t('ai_buddy.assistantManage.name'),
+    label: $t('ai-buddy.assistantManage.name'),
     rules: 'required',
   },
   {
@@ -109,17 +109,17 @@ export const assistantSchema: VbenFormSchema[] = [
       options: assistantCategoryOptions,
     },
     fieldName: 'category',
-    label: $t('ai_buddy.assistantManage.category'),
+    label: $t('ai-buddy.assistantManage.category'),
   },
   {
     component: 'Textarea',
     fieldName: 'description',
-    label: $t('ai_buddy.assistantManage.description'),
+    label: $t('ai-buddy.assistantManage.description'),
   },
   {
     component: 'Textarea',
     fieldName: 'prompt',
-    label: $t('ai_buddy.assistantManage.prompt'),
+    label: $t('ai-buddy.assistantManage.prompt'),
     rules: 'required',
   },
   {
@@ -132,6 +132,6 @@ export const assistantSchema: VbenFormSchema[] = [
     },
     defaultValue: 0,
     fieldName: 'sort',
-    label: $t('ai_buddy.assistantManage.sort'),
+    label: $t('ai-buddy.assistantManage.sort'),
   },
 ];

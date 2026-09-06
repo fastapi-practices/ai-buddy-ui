@@ -143,7 +143,7 @@ function onActionClick({ code, row }: OnActionClickParams<AISkillResult>) {
       <template #toolbar-actions>
         <VbenButton :loading="uploading" @click="() => triggerZipSelect()">
           <IconifyIcon class="size-5" icon="material-symbols:upload" />
-          {{ $t('ai_buddy.skillManage.uploadZip') }}
+          {{ $t('ai-buddy.skillManage.uploadZip') }}
         </VbenButton>
         <VbenButton
           class="ml-2"
@@ -152,7 +152,7 @@ function onActionClick({ code, row }: OnActionClickParams<AISkillResult>) {
           @click="() => triggerDirSelect()"
         >
           <IconifyIcon class="size-5" icon="material-symbols:folder-open" />
-          {{ $t('ai_buddy.skillManage.uploadDir') }}
+          {{ $t('ai-buddy.skillManage.uploadDir') }}
         </VbenButton>
       </template>
     </Grid>

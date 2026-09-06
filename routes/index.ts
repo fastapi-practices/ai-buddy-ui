@@ -8,7 +8,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy',
     redirect: '/plugins/ai-buddy/model-service',
     meta: {
-      title: $t('ai_buddy.menu'),
+      title: $t('ai-buddy.menu'),
       icon: 'tabler:robot',
     },
   },
@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/model-service',
     component: () => import('../views/model-service/index.vue'),
     meta: {
-      title: $t('ai_buddy.model'),
+      title: $t('ai-buddy.model'),
       icon: 'carbon:model-alt',
     },
   },
@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/default-model',
     component: () => import('../views/default-model/index.vue'),
     meta: {
-      title: $t('ai_buddy.default_model'),
+      title: $t('ai-buddy.default_model'),
       icon: 'carbon:model-alt',
     },
   },
@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/quick-phrase',
     component: () => import('../views/quick-phrase/index.vue'),
     meta: {
-      title: $t('ai_buddy.quick_phrase'),
+      title: $t('ai-buddy.quick_phrase'),
       icon: 'mdi:lightning-bolt-outline',
     },
   },
@@ -44,7 +44,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/mcp',
     component: () => import('../views/mcp/index.vue'),
     meta: {
-      title: $t('ai_buddy.mcp'),
+      title: $t('ai-buddy.mcp'),
       icon: 'simple-icons:modelcontextprotocol',
     },
   },
@@ -53,7 +53,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/knowledge',
     component: () => import('../views/knowledge/index.vue'),
     meta: {
-      title: $t('ai_buddy.knowledge'),
+      title: $t('ai-buddy.knowledge'),
       icon: 'mdi:book-open-variant-outline',
     },
   },
@@ -62,7 +62,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/skill',
     component: () => import('../views/skill/index.vue'),
     meta: {
-      title: $t('ai_buddy.skill'),
+      title: $t('ai-buddy.skill'),
       icon: 'mdi:puzzle-outline',
     },
   },
@@ -71,7 +71,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/assistant',
     component: () => import('../views/assistant/index.vue'),
     meta: {
-      title: $t('ai_buddy.assistant'),
+      title: $t('ai-buddy.assistant'),
       icon: 'mdi:account-tie-outline',
     },
   },
@@ -80,7 +80,7 @@ const routes: RouteRecordRaw[] = [
     path: '/plugins/ai-buddy/config',
     component: () => import('../views/config/index.vue'),
     meta: {
-      title: $t('ai_buddy.config'),
+      title: $t('ai-buddy.config'),
       icon: 'codicon:symbol-parameter',
     },
   },

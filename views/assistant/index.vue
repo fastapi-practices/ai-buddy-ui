@@ -116,8 +116,8 @@ const starters = ref<string[]>([]);
 
 const modalTitle = computed(() => {
   return formData.value?.id
-    ? $t('ui.actionTitle.edit', [$t('ai_buddy.assistant')])
-    : $t('ui.actionTitle.create', [$t('ai_buddy.assistant')]);
+    ? $t('ui.actionTitle.edit', [$t('ai-buddy.assistant')])
+    : $t('ui.actionTitle.create', [$t('ai-buddy.assistant')]);
 });
 
 const canAddStarter = computed(
@@ -187,7 +187,7 @@ const [Modal, modalApi] = useVbenModal({
       <template #toolbar-actions>
         <VbenButton @click="() => modalApi.setData(null).open()">
           <MaterialSymbolsAdd class="size-5" />
-          {{ $t('ui.actionTitle.create', [$t('ai_buddy.assistant')]) }}
+          {{ $t('ui.actionTitle.create', [$t('ai-buddy.assistant')]) }}
         </VbenButton>
       </template>
     </Grid>
@@ -195,7 +195,7 @@ const [Modal, modalApi] = useVbenModal({
       <Form />
       <div class="mt-4">
         <div class="mb-2 text-sm">
-          {{ $t('ai_buddy.assistantManage.starters') }}
+          {{ $t('ai-buddy.assistantManage.starters') }}
         </div>
         <div class="flex flex-col gap-2">
           <div
@@ -206,7 +206,7 @@ const [Modal, modalApi] = useVbenModal({
             <a-input
               v-model:value="starters[index]"
               :maxlength="AI_ASSISTANT_STARTER_TEXT_MAX"
-              :placeholder="$t('ai_buddy.assistantManage.starterPlaceholder')"
+              :placeholder="$t('ai-buddy.assistantManage.starterPlaceholder')"
             />
             <VbenButton variant="outline" @click="removeStarter(index)">
               {{ $t('common.delete') }}
@@ -218,7 +218,7 @@ const [Modal, modalApi] = useVbenModal({
             @click="addStarter"
           >
             <MaterialSymbolsAdd class="size-4" />
-            {{ $t('ai_buddy.assistantManage.addStarter') }}
+            {{ $t('ai-buddy.assistantManage.addStarter') }}
           </VbenButton>
         </div>
       </div>

@@ -153,7 +153,7 @@ function onActionClick({ code, row }: OnActionClickParams<AIKnowledgeResult>) {
       <template #toolbar-actions>
         <VbenButton :loading="uploading" @click="() => triggerFileSelect()">
           <IconifyIcon class="size-5" icon="material-symbols:upload" />
-          {{ $t('ai_buddy.knowledgeManage.uploadFile') }}
+          {{ $t('ai-buddy.knowledgeManage.uploadFile') }}
         </VbenButton>
         <VbenButton
           class="ml-2"
@@ -162,7 +162,7 @@ function onActionClick({ code, row }: OnActionClickParams<AIKnowledgeResult>) {
           @click="() => triggerZipSelect()"
         >
           <IconifyIcon class="size-5" icon="material-symbols:folder-zip" />
-          {{ $t('ai_buddy.knowledgeManage.uploadZip') }}
+          {{ $t('ai-buddy.knowledgeManage.uploadZip') }}
         </VbenButton>
         <VbenButton
           class="ml-2"
@@ -171,7 +171,7 @@ function onActionClick({ code, row }: OnActionClickParams<AIKnowledgeResult>) {
           @click="triggerDirSelect"
         >
           <IconifyIcon class="size-5" icon="material-symbols:folder-open" />
-          {{ $t('ai_buddy.knowledgeManage.uploadDir') }}
+          {{ $t('ai-buddy.knowledgeManage.uploadDir') }}
         </VbenButton>
       </template>
     </Grid>
