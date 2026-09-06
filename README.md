@@ -1,5 +1,29 @@
-请在此填写插件使用说明和您的联系方式
+# AI Buddy UI
 
-如果需要付费，请提供付费相关说明
+为 AI Buddy 提供后台管理，包括供应商、模型、默认助手模型、快捷短语、助手、MCP、知识库、技能和搜索密钥
 
-插件开发文档：[fba plugin dev](https://fastapi-practices.github.io/fastapi_best_architecture_docs/plugin/dev.html)
+## 插件类型
+
+- 前端插件
+
+## 配置说明
+
+无需额外环境变量或前端运行时配置
+
+安装前请确保后端 AI Buddy 插件已启用，并已完成对应菜单和权限配置
+
+## 使用方式
+
+1. 安装并启用后端 AI Buddy 插件和前端 AI Buddy 插件
+2. 在系统中进入 AI Buddy 相关菜单
+3. 维护供应商、模型、默认助手模型、快捷短语、助手、MCP、知识库、技能和搜索密钥
+
+## 卸载说明
+
+- 卸载插件后，建议同步移除 AI Buddy 相关菜单和权限
+- 如业务流程已依赖 AI Buddy 能力，请同步清理对应集成
+
+## 联系方式
+
+- 作者：`wu-clan`
+- 反馈方式：提交 Issue 或 PR

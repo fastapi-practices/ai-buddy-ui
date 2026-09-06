@@ -1,0 +1,39 @@
+{
+  "menu": "AI Buddy",
+  "default_model": "Default Model",
+  "model": "Providers & Models",
+  "quick_phrase": "Quick Phrase",
+  "mcp": "MCP",
+  "config": "AI Config",
+  "knowledge": "Knowledge Base",
+  "skill": "Skills",
+  "assistant": "Assistants",
+  "knowledgeManage": {
+    "title": "Title",
+    "source": "Source",
+    "objectKey": "Object Key",
+    "uploadFile": "Upload File",
+    "uploadZip": "Upload Zip",
+    "uploadDir": "Upload Folder",
+    "deleteConfirm": "Delete {0}?"
+  },
+  "skillManage": {
+    "name": "Name",
+    "description": "Description",
+    "objectKey": "Object Key",
+    "uploadZip": "Upload Zip",
+    "uploadDir": "Upload Folder",
+    "deleteConfirm": "Delete {0}?"
+  },
+  "assistantManage": {
+    "name": "Name",
+    "category": "Category",
+    "description": "Description",
+    "prompt": "Prompt",
+    "starters": "Starters",
+    "starterPlaceholder": "Suggested opening messages for a new chat",
+    "addStarter": "Add starter",
+    "sort": "Sort",
+    "deleteConfirm": "Delete {0}?"
+  }
+}

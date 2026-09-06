@@ -1,0 +1,39 @@
+{
+  "menu": "AI Buddy",
+  "default_model": "默认模型",
+  "model": "供应商与模型",
+  "quick_phrase": "快捷短语",
+  "mcp": "MCP",
+  "config": "AI 配置",
+  "knowledge": "知识库",
+  "skill": "技能",
+  "assistant": "助手",
+  "knowledgeManage": {
+    "title": "标题",
+    "source": "来源",
+    "objectKey": "对象键",
+    "uploadFile": "上传文件",
+    "uploadZip": "上传 zip",
+    "uploadDir": "上传目录",
+    "deleteConfirm": "确定删除 {0} 吗？"
+  },
+  "skillManage": {
+    "name": "名称",
+    "description": "描述",
+    "objectKey": "对象键",
+    "uploadZip": "上传 zip",
+    "uploadDir": "上传目录",
+    "deleteConfirm": "确定删除 {0} 吗？"
+  },
+  "assistantManage": {
+    "name": "名称",
+    "category": "分类",
+    "description": "描述",
+    "prompt": "提示词",
+    "starters": "开场白",
+    "starterPlaceholder": "用户进入对话时可点选的开场白",
+    "addStarter": "添加开场白",
+    "sort": "排序",
+    "deleteConfirm": "确定删除 {0} 吗？"
+  }
+}
