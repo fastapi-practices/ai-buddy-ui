@@ -435,6 +435,10 @@ export async function getAIMcpListApi(params?: AIMcpQueryParams) {
   });
 }
 
+export async function getAllAIMcpApi() {
+  return requestClient.get<AIMcpResult[]>('/api/v1/mcps/all');
+}
+
 export async function createAIMcpApi(data: AIMcpParams) {
   return requestClient.post<AIActionResult>('/api/v1/mcps', data);
 }
