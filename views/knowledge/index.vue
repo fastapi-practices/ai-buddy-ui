@@ -103,8 +103,6 @@ async function handleFileChange(event: Event) {
     await createAIKnowledgeApi(files);
     message.success($t('ui.actionMessage.operationSuccess'));
     onRefresh();
-  } catch (error) {
-    message.error((error as Error).message);
   } finally {
     uploading.value = false;
   }

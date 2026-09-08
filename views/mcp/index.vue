@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AIMcpResult } from '../../api';
+import type { AIMcpParams, AIMcpResult } from '../../api';
 import type { AIMcpFormValues } from './mcp-params';
 
 import type { VbenFormProps } from '#/adapter/form';
@@ -150,8 +150,6 @@ const [Modal, modalApi] = useVbenModal({
       message.success($t('ui.actionMessage.operationSuccess'));
       await modalApi.close();
       onRefresh();
-    } catch (error) {
-      message.error((error as Error).message);
     } finally {
       modalApi.unlock();
     }
@@ -192,23 +190,27 @@ const [ImportModal, importModalApi] = useVbenModal({
       return;
     }
 
-    importModalApi.lock();
-
+    const { jsonText } = await importFormApi.getValues<{
+      jsonText: string;
+    }>();
+    let payloads: AIMcpParams[];
     try {
-      const { jsonText } = await importFormApi.getValues<{
-        jsonText: string;
-      }>();
-      const payloads = parseStandardMcpJson(jsonText, {
+      payloads = parseStandardMcpJson(jsonText, {
         allowStdio: isSuperuser.value,
       });
+    } catch (error) {
+      message.error((error as Error).message);
+      return;
+    }
+
+    importModalApi.lock();
+    try {
       for (const payload of payloads) {
         await createAIMcpApi(payload);
       }
       message.success($t('ui.actionMessage.operationSuccess'));
       await importModalApi.close();
       onRefresh();
-    } catch (error) {
-      message.error((error as Error).message);
     } finally {
       importModalApi.unlock();
     }

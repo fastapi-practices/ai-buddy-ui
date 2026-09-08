@@ -134,8 +134,6 @@ const [Modal, modalApi] = useVbenModal({
       message.success($t('ui.actionMessage.operationSuccess'));
       await modalApi.close();
       onRefresh();
-    } catch (error) {
-      message.error((error as Error).message);
     } finally {
       modalApi.unlock();
     }
