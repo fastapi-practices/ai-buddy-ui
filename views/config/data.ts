@@ -8,7 +8,7 @@ import {
   AI_TAVILY_API_KEY,
 } from './config-keys';
 
-export const aiConfigSchema: VbenFormSchema[] = [
+export const searchEngineSchema: VbenFormSchema[] = [
   {
     component: 'RadioGroup',
     componentProps: {
