@@ -4,17 +4,24 @@ import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
 import { Page } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
+import Rag from './rag.vue';
 import SearchEngine from './search-engine.vue';
 
 const activeKey = ref('0');
 
 const searchEngineRef = ref();
+const ragRef = ref();
 
 const tabItems = computed(() => [
   {
     key: '0',
     label: $t('ai-buddy.searchEngine'),
     icon: () => h('span', { class: 'icon-[carbon--search] -mb-1 size-5' }),
+  },
+  {
+    key: '1',
+    label: $t('ai-buddy.rag'),
+    icon: () => h('span', { class: 'icon-[carbon--data-base] -mb-1 size-5' }),
   },
 ]);
 
@@ -23,6 +30,12 @@ watch(activeKey, async (newValue) => {
     await nextTick();
     if (searchEngineRef.value) {
       await searchEngineRef.value.fetchConfigList();
+    }
+  }
+  if (newValue === '1') {
+    await nextTick();
+    if (ragRef.value) {
+      await ragRef.value.fetchConfigList();
     }
   }
 });
@@ -51,6 +64,7 @@ onMounted(async () => {
       >
         <template #contentRender="{ item }">
           <SearchEngine v-if="item.key === '0'" ref="searchEngineRef" />
+          <Rag v-else-if="item.key === '1'" ref="ragRef" />
         </template>
       </a-tabs>
     </a-card>

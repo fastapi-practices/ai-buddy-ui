@@ -12,17 +12,17 @@ import { message } from 'antdv-next';
 import { useVbenForm } from '#/adapter/form';
 
 import { getAllAIConfigApi, updateAIConfigApi } from '../../api';
-import { pickSearchEngineConfigs } from './config-keys';
-import { searchEngineSchema } from './data';
+import { pickRagConfigs } from './config-keys';
+import { ragSchema } from './data';
 
 const [Form, formApi] = useVbenForm({
   showDefaultActions: false,
-  schema: searchEngineSchema,
+  schema: ragSchema,
   commonConfig: {
     controlClass: 'w-full max-w-80',
     disabled: true,
     labelClass: 'justify-start ml-2',
-    labelWidth: 140,
+    labelWidth: 180,
     hideRequiredMark: true,
   },
 });
@@ -35,7 +35,7 @@ const configData = ref<AIConfigResult[]>([]);
 const fetchConfigList = async () => {
   loading.value = true;
   try {
-    configData.value = pickSearchEngineConfigs(await getAllAIConfigApi());
+    configData.value = pickRagConfigs(await getAllAIConfigApi());
     configData.value.forEach((config) => {
       formApi.setState((prev: any) => {
         return {
@@ -59,7 +59,7 @@ const fetchConfigList = async () => {
   }
 };
 
-const saveSearchEngineConfig = async () => {
+const saveRagConfig = async () => {
   const { valid } = await formApi.validate();
   if (!valid) {
     return;
@@ -112,7 +112,7 @@ defineExpose({
         v-show="!editButtonShow"
         class="ml-1.5 mt-3"
         :loading="saveLoading"
-        @click="saveSearchEngineConfig"
+        @click="saveRagConfig"
       >
         <MaterialSymbolsEdit class="mr-1" />
         {{ $t('common.save') }}
