@@ -71,13 +71,13 @@ export function useModelColumns(
       title: $t('common.table.operation'),
       align: 'center',
       fixed: 'right',
-      width: 140,
+      width: 100,
       cellRender: {
         attrs: {
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: ['edit', 'delete'],
+        options: ['edit'],
       },
     },
   ];

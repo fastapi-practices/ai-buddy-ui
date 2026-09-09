@@ -7,7 +7,7 @@ import type {
 
 import { computed, onMounted, ref } from 'vue';
 
-import { confirm, useVbenModal, VbenButton } from '@vben/common-ui';
+import { useVbenModal, VbenButton } from '@vben/common-ui';
 import {
   MaterialSymbolsAdd,
   MaterialSymbolsDelete,
@@ -48,9 +48,6 @@ const hasMore = ref(false);
 const providerCursor = ref<string>();
 const formData = ref<AIProviderResult>();
 const scrollContainerRef = ref<HTMLElement>();
-const selectedProviderIds = ref<number[]>([]);
-const deleteLoading = ref(false);
-const deleteDisable = computed(() => selectedProviderIds.value.length === 0);
 
 const PROVIDER_PAGE_SIZE = 20;
 
@@ -60,32 +57,11 @@ const modalTitle = computed(() => {
     : $t('ui.actionTitle.create', ['供应商']);
 });
 
-function pruneSelectedProviders(nextProviders: AIProviderResult[]) {
-  const existingIds = new Set(nextProviders.map((item) => item.id));
-  selectedProviderIds.value = selectedProviderIds.value.filter((id) =>
-    existingIds.has(id),
-  );
-}
-
-function handleProviderCheck(id: number, checked: boolean) {
-  if (checked) {
-    if (!selectedProviderIds.value.includes(id)) {
-      selectedProviderIds.value = [...selectedProviderIds.value, id];
-    }
-    return;
-  }
-
-  selectedProviderIds.value = selectedProviderIds.value.filter(
-    (item) => item !== id,
-  );
-}
-
 function syncProviders(
   nextProviders: AIProviderResult[],
   preferredId?: number,
 ) {
   providers.value = nextProviders;
-  pruneSelectedProviders(nextProviders);
   emit('providersChange', nextProviders);
 
   const nextId = pickActiveProviderId(
@@ -150,32 +126,6 @@ async function handleDelete(provider: AIProviderResult) {
   });
 
   await refreshProviders(fallbackId);
-}
-
-function handleBatchDelete() {
-  const pks = selectedProviderIds.value;
-  if (pks.length === 0) {
-    return;
-  }
-
-  confirm({
-    content: '确定删除已勾选的供应商吗？',
-    icon: 'warning',
-  }).then(async () => {
-    deleteLoading.value = true;
-    try {
-      const fallbackId = providers.value.find(
-        (item) => !pks.includes(item.id),
-      )?.id;
-
-      await deleteAIProviderApi(pks);
-      message.success($t('ui.actionMessage.deleteSuccess'));
-      selectedProviderIds.value = [];
-      await refreshProviders(fallbackId);
-    } finally {
-      deleteLoading.value = false;
-    }
-  });
 }
 
 const [Form, formApi] = useVbenForm({
@@ -259,16 +209,6 @@ useInfiniteScroll(
         <div class="text-sm font-medium text-foreground">供应商</div>
       </div>
       <div class="flex items-center gap-2">
-        <VbenButton
-          :disabled="deleteDisable"
-          :loading="deleteLoading"
-          size="sm"
-          variant="destructive"
-          @click="handleBatchDelete"
-        >
-          <MaterialSymbolsDelete class="size-4" />
-          批量删除
-        </VbenButton>
         <VbenButton size="sm" @click="() => modalApi.setData(null).open()">
           <MaterialSymbolsAdd class="size-4" />
           新增
@@ -296,19 +236,9 @@ useInfiniteScroll(
         ref="scrollContainerRef"
         class="min-h-0 flex-1 space-y-3 overflow-y-auto"
       >
-        <div
-          v-for="item in providers"
-          :key="item.id"
-          class="flex items-start gap-2"
-        >
-          <a-checkbox
-            class="mt-[14px] shrink-0"
-            :checked="selectedProviderIds.includes(item.id)"
-            @click.stop
-            @update:checked="(checked) => handleProviderCheck(item.id, checked)"
-          />
+        <div v-for="item in providers" :key="item.id">
           <button
-            class="min-w-0 flex-1 rounded-lg border px-3 py-3 text-left transition-colors"
+            class="w-full rounded-lg border px-3 py-3 text-left transition-colors"
             :class="
               item.id === activeProviderId
                 ? 'border-primary bg-primary/5'

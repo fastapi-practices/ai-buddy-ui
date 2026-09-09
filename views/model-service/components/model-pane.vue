@@ -207,16 +207,6 @@ function handleBatchDelete() {
 
 function onActionClick({ code, row }: OnActionClickParams<AIModelResult>) {
   switch (code) {
-    case 'delete': {
-      deleteAIModelApi([row.id]).then(() => {
-        message.success({
-          content: $t('ui.actionMessage.deleteSuccess', [row.model_id]),
-          key: 'action_process_msg',
-        });
-        onRefresh();
-      });
-      break;
-    }
     case 'edit': {
       modalApi.setData(row).open();
       break;
