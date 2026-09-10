@@ -72,6 +72,11 @@ export function useAssistantColumns(
       width: 80,
     },
     {
+      field: 'usage_count',
+      title: $t('ai-buddy.assistantManage.usageCount'),
+      width: 100,
+    },
+    {
       field: 'created_time',
       title: $t('common.table.created_time'),
       width: 168,

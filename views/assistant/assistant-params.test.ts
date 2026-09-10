@@ -53,6 +53,7 @@ describe('toAIAssistantFormValues', () => {
       name: 'writer',
       prompt: 'you are a writer',
       starters,
+      usage_count: 0,
       created_time: '2026-01-01',
     });
 

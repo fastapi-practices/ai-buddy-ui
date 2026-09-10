@@ -10,6 +10,14 @@
   "knowledge": "Knowledge Base",
   "skill": "Skills",
   "assistant": "Assistants",
+  "upload": {
+    "import": "Import",
+    "dropHint": "Drop files here or click to upload",
+    "selectFolder": "Select folder",
+    "fileRequirements": "File requirements",
+    "moreFiles": "and {0} more files",
+    "selectFiles": "Select files to upload first"
+  },
   "knowledgeManage": {
     "title": "Title",
     "source": "Source",
@@ -17,14 +25,23 @@
     "uploadFile": "Upload File",
     "uploadZip": "Upload Zip",
     "uploadDir": "Upload Folder",
+    "import": "Import Knowledge",
+    "requirementFiles": "Use md or txt files, or a folder / zip that contains them",
+    "requirementEncoding": "Files must be UTF-8 encoded",
+    "unsupported": "Knowledge only supports md, txt, or a zip that contains them",
     "deleteConfirm": "Delete {0}?"
   },
   "skillManage": {
     "name": "Name",
     "description": "Description",
+    "version": "Version",
     "objectKey": "Object Key",
     "uploadZip": "Upload Zip",
     "uploadDir": "Upload Folder",
+    "import": "Import Skill",
+    "requirementZip": "The folder or .zip must contain a SKILL.md file",
+    "requirementFrontmatter": "SKILL.md must include YAML skill name and description",
+    "needSkillMd": "Upload a folder or zip that contains SKILL.md",
     "deleteConfirm": "Delete {0}?"
   },
   "assistantManage": {
@@ -36,6 +53,7 @@
     "starterPlaceholder": "Suggested opening messages for a new chat",
     "addStarter": "Add starter",
     "sort": "Sort",
+    "usageCount": "Usage Count",
     "deleteConfirm": "Delete {0}?"
   }
 }

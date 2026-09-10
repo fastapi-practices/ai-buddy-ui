@@ -10,6 +10,14 @@
   "knowledge": "知识库",
   "skill": "技能",
   "assistant": "助手",
+  "upload": {
+    "import": "导入",
+    "dropHint": "拖拽文件或点击上传",
+    "selectFolder": "选择文件夹",
+    "fileRequirements": "文件要求",
+    "moreFiles": "等 {0} 个文件",
+    "selectFiles": "请先选择要上传的文件"
+  },
   "knowledgeManage": {
     "title": "标题",
     "source": "来源",
@@ -17,14 +25,23 @@
     "uploadFile": "上传文件",
     "uploadZip": "上传 zip",
     "uploadDir": "上传目录",
+    "import": "导入知识",
+    "requirementFiles": "支持 md、txt 文件，或包含这些文件的文件夹 / zip",
+    "requirementEncoding": "文件需使用 UTF-8 编码",
+    "unsupported": "知识仅支持 md、txt 文件或包含 md、txt 的 zip",
     "deleteConfirm": "确定删除 {0} 吗？"
   },
   "skillManage": {
     "name": "名称",
     "description": "描述",
+    "version": "版本",
     "objectKey": "对象键",
     "uploadZip": "上传 zip",
     "uploadDir": "上传目录",
+    "import": "导入技能",
+    "requirementZip": "文件夹或者 .zip 需要包含 SKILL.md 文件",
+    "requirementFrontmatter": "SKILL.md 需包含 YAML 格式的技能名称和描述",
+    "needSkillMd": "请上传包含 SKILL.md 的文件夹或 zip",
     "deleteConfirm": "确定删除 {0} 吗？"
   },
   "assistantManage": {
@@ -36,6 +53,7 @@
     "starterPlaceholder": "用户进入对话时可点选的开场白",
     "addStarter": "添加开场白",
     "sort": "排序",
+    "usageCount": "使用次数",
     "deleteConfirm": "确定删除 {0} 吗？"
   }
 }

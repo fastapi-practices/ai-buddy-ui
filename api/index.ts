@@ -192,6 +192,7 @@ export interface AISkillParams {
 
 export interface AISkillResult extends AISkillParams {
   content: string;
+  version: string;
   id: number;
   user_id: number;
   object_key?: null | string;
@@ -218,6 +219,7 @@ export interface AIAssistantParams {
 export interface AIAssistantResult extends AIAssistantParams {
   id: number;
   user_id: number;
+  usage_count: number;
   created_time: string;
   updated_time?: null | string;
 }

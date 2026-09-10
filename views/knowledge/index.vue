@@ -7,9 +7,9 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-import { Page, VbenButton } from '@vben/common-ui';
+import { Page, useVbenModal, VbenButton } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { $t } from '@vben/locales';
 
@@ -22,7 +22,11 @@ import {
   deleteAIKnowledgeApi,
   getAIKnowledgeListApi,
 } from '../../api';
-import { takeInputFiles } from '../../api/upload-file';
+import {
+  getKnowledgeUploadIssue,
+  takeKnowledgeUploadFiles,
+} from '../../api/upload-file';
+import UploadDropzone from '../components/upload-dropzone.vue';
 import { queryKnowledgeSchema, useKnowledgeColumns } from './data';
 
 const formOptions: VbenFormProps = {
@@ -71,41 +75,54 @@ const [Grid, gridApi] = useVbenVxeGrid({
   gridOptions,
 });
 
-const fileInputRef = ref<HTMLInputElement>();
-const zipInputRef = ref<HTMLInputElement>();
-const dirInputRef = ref<HTMLInputElement>();
-const uploading = ref(false);
+const uploadFiles = ref<File[]>([]);
+const knowledgeRequirements = computed(() => [
+  $t('ai-buddy.knowledgeManage.requirementFiles'),
+  $t('ai-buddy.knowledgeManage.requirementEncoding'),
+]);
 
 function onRefresh() {
   gridApi.query();
 }
 
-function triggerFileSelect() {
-  fileInputRef.value?.click();
-}
+const [Modal, modalApi] = useVbenModal({
+  class: 'w-[520px]',
+  confirmDisabled: true,
+  confirmText: $t('ai-buddy.upload.import'),
+  destroyOnClose: true,
+  async onConfirm() {
+    const issue = getKnowledgeUploadIssue(uploadFiles.value);
+    if (issue === 'empty') {
+      message.warning($t('ai-buddy.upload.selectFiles'));
+      return;
+    }
+    if (issue === 'unsupported') {
+      message.warning($t('ai-buddy.knowledgeManage.unsupported'));
+      return;
+    }
 
-function triggerZipSelect() {
-  zipInputRef.value?.click();
-}
+    modalApi.lock();
+    try {
+      await createAIKnowledgeApi(uploadFiles.value);
+      message.success($t('ui.actionMessage.operationSuccess'));
+      await modalApi.close();
+      onRefresh();
+    } finally {
+      modalApi.unlock();
+    }
+  },
+  onOpenChange(isOpen) {
+    if (isOpen) {
+      uploadFiles.value = [];
+      modalApi.setState({ confirmDisabled: true });
+    }
+  },
+});
 
-function triggerDirSelect() {
-  dirInputRef.value?.click();
-}
-
-async function handleFileChange(event: Event) {
-  const files = takeInputFiles(event.target as HTMLInputElement);
-  if (files.length === 0) {
-    return;
-  }
-
-  uploading.value = true;
-  try {
-    await createAIKnowledgeApi(files);
-    message.success($t('ui.actionMessage.operationSuccess'));
-    onRefresh();
-  } finally {
-    uploading.value = false;
-  }
+function onSelectUploadFiles(files: File[]) {
+  const nextFiles = takeKnowledgeUploadFiles(files);
+  uploadFiles.value = nextFiles;
+  modalApi.setState({ confirmDisabled: nextFiles.length === 0 });
 }
 
 function onActionClick({ code, row }: OnActionClickParams<AIKnowledgeResult>) {
@@ -123,55 +140,24 @@ function onActionClick({ code, row }: OnActionClickParams<AIKnowledgeResult>) {
 
 <template>
   <Page auto-content-height>
-    <input
-      ref="fileInputRef"
-      accept=".md,.markdown,.txt,.text"
-      class="hidden"
-      multiple
-      type="file"
-      @change="handleFileChange"
-    />
-    <input
-      ref="zipInputRef"
-      accept=".zip"
-      class="hidden"
-      type="file"
-      @change="handleFileChange"
-    />
-    <input
-      ref="dirInputRef"
-      class="hidden"
-      directory
-      multiple
-      type="file"
-      webkitdirectory
-      @change="handleFileChange"
-    />
     <Grid>
       <template #toolbar-actions>
-        <VbenButton :loading="uploading" @click="() => triggerFileSelect()">
+        <VbenButton @click="() => modalApi.open()">
           <IconifyIcon class="size-5" icon="material-symbols:upload" />
-          {{ $t('ai-buddy.knowledgeManage.uploadFile') }}
-        </VbenButton>
-        <VbenButton
-          class="ml-2"
-          :loading="uploading"
-          variant="outline"
-          @click="() => triggerZipSelect()"
-        >
-          <IconifyIcon class="size-5" icon="material-symbols:folder-zip" />
-          {{ $t('ai-buddy.knowledgeManage.uploadZip') }}
-        </VbenButton>
-        <VbenButton
-          class="ml-2"
-          :loading="uploading"
-          variant="outline"
-          @click="triggerDirSelect"
-        >
-          <IconifyIcon class="size-5" icon="material-symbols:folder-open" />
-          {{ $t('ai-buddy.knowledgeManage.uploadDir') }}
+          {{ $t('ai-buddy.knowledgeManage.import') }}
         </VbenButton>
       </template>
     </Grid>
+    <Modal
+      content-class="px-4 py-4 md:px-5 md:py-5"
+      :title="$t('ai-buddy.knowledgeManage.import')"
+    >
+      <UploadDropzone
+        accept=".md,.markdown,.txt,.text,.zip,application/zip"
+        :files="uploadFiles"
+        :requirements="knowledgeRequirements"
+        @select="onSelectUploadFiles"
+      />
+    </Modal>
   </Page>
 </template>

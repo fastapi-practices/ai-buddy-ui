@@ -7,9 +7,9 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-import { Page, VbenButton } from '@vben/common-ui';
+import { Page, useVbenModal, VbenButton } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { $t } from '@vben/locales';
 
@@ -22,7 +22,8 @@ import {
   deleteAISkillApi,
   getAISkillListApi,
 } from '../../api';
-import { takeInputFiles } from '../../api/upload-file';
+import { getSkillUploadIssue } from '../../api/upload-file';
+import UploadDropzone from '../components/upload-dropzone.vue';
 import { querySkillSchema, useSkillColumns } from './data';
 
 const formOptions: VbenFormProps = {
@@ -71,36 +72,53 @@ const [Grid, gridApi] = useVbenVxeGrid({
   gridOptions,
 });
 
-const zipInputRef = ref<HTMLInputElement>();
-const dirInputRef = ref<HTMLInputElement>();
-const uploading = ref(false);
+const uploadFiles = ref<File[]>([]);
+const skillRequirements = computed(() => [
+  $t('ai-buddy.skillManage.requirementZip'),
+  $t('ai-buddy.skillManage.requirementFrontmatter'),
+]);
 
 function onRefresh() {
   gridApi.query();
 }
 
-function triggerZipSelect() {
-  zipInputRef.value?.click();
-}
+const [Modal, modalApi] = useVbenModal({
+  class: 'w-[520px]',
+  confirmDisabled: true,
+  confirmText: $t('ai-buddy.upload.import'),
+  destroyOnClose: true,
+  async onConfirm() {
+    const issue = getSkillUploadIssue(uploadFiles.value);
+    if (issue === 'empty') {
+      message.warning($t('ai-buddy.upload.selectFiles'));
+      return;
+    }
+    if (issue === 'missing-skill-md') {
+      message.warning($t('ai-buddy.skillManage.needSkillMd'));
+      return;
+    }
 
-function triggerDirSelect() {
-  dirInputRef.value?.click();
-}
+    modalApi.lock();
+    try {
+      await createAISkillApi(uploadFiles.value);
+      message.success($t('ui.actionMessage.operationSuccess'));
+      await modalApi.close();
+      onRefresh();
+    } finally {
+      modalApi.unlock();
+    }
+  },
+  onOpenChange(isOpen) {
+    if (isOpen) {
+      uploadFiles.value = [];
+      modalApi.setState({ confirmDisabled: true });
+    }
+  },
+});
 
-async function handleFileChange(event: Event) {
-  const files = takeInputFiles(event.target as HTMLInputElement);
-  if (files.length === 0) {
-    return;
-  }
-
-  uploading.value = true;
-  try {
-    await createAISkillApi(files);
-    message.success($t('ui.actionMessage.operationSuccess'));
-    onRefresh();
-  } finally {
-    uploading.value = false;
-  }
+function onSelectUploadFiles(files: File[]) {
+  uploadFiles.value = files;
+  modalApi.setState({ confirmDisabled: files.length === 0 });
 }
 
 function onActionClick({ code, row }: OnActionClickParams<AISkillResult>) {
@@ -121,38 +139,24 @@ function onActionClick({ code, row }: OnActionClickParams<AISkillResult>) {
 
 <template>
   <Page auto-content-height>
-    <input
-      ref="zipInputRef"
-      accept=".zip"
-      class="hidden"
-      type="file"
-      @change="handleFileChange"
-    />
-    <input
-      ref="dirInputRef"
-      class="hidden"
-      directory
-      multiple
-      type="file"
-      webkitdirectory
-      @change="handleFileChange"
-    />
     <Grid>
       <template #toolbar-actions>
-        <VbenButton :loading="uploading" @click="() => triggerZipSelect()">
+        <VbenButton @click="() => modalApi.open()">
           <IconifyIcon class="size-5" icon="material-symbols:upload" />
-          {{ $t('ai-buddy.skillManage.uploadZip') }}
-        </VbenButton>
-        <VbenButton
-          class="ml-2"
-          :loading="uploading"
-          variant="outline"
-          @click="() => triggerDirSelect()"
-        >
-          <IconifyIcon class="size-5" icon="material-symbols:folder-open" />
-          {{ $t('ai-buddy.skillManage.uploadDir') }}
+          {{ $t('ai-buddy.skillManage.import') }}
         </VbenButton>
       </template>
     </Grid>
+    <Modal
+      content-class="px-4 py-4 md:px-5 md:py-5"
+      :title="$t('ai-buddy.skillManage.import')"
+    >
+      <UploadDropzone
+        accept=".zip,application/zip"
+        :files="uploadFiles"
+        :requirements="skillRequirements"
+        @select="onSelectUploadFiles"
+      />
+    </Modal>
   </Page>
 </template>

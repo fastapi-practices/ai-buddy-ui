@@ -30,6 +30,11 @@ export function useSkillColumns(
       align: 'left',
     },
     {
+      field: 'version',
+      title: $t('ai-buddy.skillManage.version'),
+      width: 100,
+    },
+    {
       field: 'description',
       title: $t('ai-buddy.skillManage.description'),
       align: 'left',
