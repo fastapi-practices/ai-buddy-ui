@@ -509,7 +509,7 @@ export async function createAIKnowledgeApi(
   if (options?.title) {
     fields.title = options.title;
   }
-  if (options?.provider_id != null) {
+  if (typeof options?.provider_id === 'number') {
     fields.provider_id = String(options.provider_id);
   }
   if (options?.model_id) {
