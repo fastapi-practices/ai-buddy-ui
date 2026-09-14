@@ -1,4 +1,4 @@
-const KNOWLEDGE_EXTS = new Set(['md', 'markdown', 'txt', 'text', 'zip']);
+const KNOWLEDGE_EXTS = new Set(['markdown', 'md', 'text', 'txt', 'zip']);
 const uploadRelativePaths = new WeakMap<File, string>();
 
 interface UploadFileSystemReader {

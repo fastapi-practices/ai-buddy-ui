@@ -42,7 +42,7 @@ import {
 const userStore = useUserStore();
 const isSuperuser = computed(() =>
   Boolean(
-    (userStore.userInfo as { is_superuser?: boolean } | null)?.is_superuser,
+    (userStore.userInfo as null | { is_superuser?: boolean })?.is_superuser,
   ),
 );
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AIAssistantResult } from '../../api';
 import type { AIAssistantFormValues } from './assistant-params';
+
 import type { VbenFormProps } from '#/adapter/form';
 import type {
   OnActionClickParams,

@@ -36,7 +36,7 @@ import {
   updateAIModelApi,
 } from '../../../api';
 import { createModelSchema, queryModelSchema, useModelColumns } from '../data';
-import { createAIModelPayload, type AIModelFormValues } from '../model-params';
+import { type AIModelFormValues, createAIModelPayload } from '../model-params';
 
 const props = defineProps<{
   provider?: AIProviderResult;
