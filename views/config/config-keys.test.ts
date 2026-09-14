@@ -33,21 +33,21 @@ describe('pickEditableAIConfigs', () => {
       'AI_QDRANT_API_KEY',
     ]);
 
-    expect(pickEditableAIConfigs(allConfigRows).map((item) => item.key)).toEqual(
-      [
-        'AI_CONFIG_STATUS',
-        'AI_EXA_API_KEY',
-        'AI_TAVILY_API_KEY',
-        'AI_QDRANT_URL',
-        'AI_QDRANT_API_KEY',
-      ],
-    );
+    expect(
+      pickEditableAIConfigs(allConfigRows).map((item) => item.key),
+    ).toEqual([
+      'AI_CONFIG_STATUS',
+      'AI_EXA_API_KEY',
+      'AI_TAVILY_API_KEY',
+      'AI_QDRANT_URL',
+      'AI_QDRANT_API_KEY',
+    ]);
   });
 
   it('splits search engine and RAG keys for tab saves', () => {
-    expect(pickSearchEngineConfigs(allConfigRows).map((item) => item.key)).toEqual(
-      ['AI_CONFIG_STATUS', 'AI_EXA_API_KEY', 'AI_TAVILY_API_KEY'],
-    );
+    expect(
+      pickSearchEngineConfigs(allConfigRows).map((item) => item.key),
+    ).toEqual(['AI_CONFIG_STATUS', 'AI_EXA_API_KEY', 'AI_TAVILY_API_KEY']);
     expect(pickRagConfigs(allConfigRows).map((item) => item.key)).toEqual([
       'AI_QDRANT_URL',
       'AI_QDRANT_API_KEY',

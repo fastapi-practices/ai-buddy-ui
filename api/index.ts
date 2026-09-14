@@ -392,9 +392,7 @@ export async function getAIDefaultModelApi(scene: AIDefaultModelScene) {
   return requestClient.get<AIDefaultModelResult>(defaultModelPath(scene));
 }
 
-export async function getAIDefaultModelOptionalApi(
-  scene: AIDefaultModelScene,
-) {
+export async function getAIDefaultModelOptionalApi(scene: AIDefaultModelScene) {
   const response = await fetch(resolveAIBuddyApiUrl(defaultModelPath(scene)), {
     headers: getAIBuddyRequestHeaders(),
     method: 'GET',

@@ -249,7 +249,9 @@ onActivated(async () => {
                 "
                 :loading="sceneForms[meta.scene].modelsLoading"
                 :options="modelOptions(sceneForms[meta.scene])"
-                :placeholder="$t('ai-buddy.defaultModelManage.modelPlaceholder')"
+                :placeholder="
+                  $t('ai-buddy.defaultModelManage.modelPlaceholder')
+                "
               />
             </div>
           </div>
