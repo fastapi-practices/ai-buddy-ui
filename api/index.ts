@@ -13,6 +13,8 @@ export type AIActionResult = null | string;
 export type AIProviderType = 0 | 1 | 2 | 3 | 4 | 5;
 export type AIStatusType = 0 | 1;
 export type AIMcpType = 0 | 1 | 2;
+export type AIDefaultModelScene = 'assistant' | 'embedding';
+export type AIAssistantSortType = 'comprehensive' | 'hottest' | 'newest';
 
 interface AIProviderQueryParams {
   cursor?: null | string;
@@ -59,6 +61,7 @@ export interface AIProviderModelOptionResult {
 export interface AIModelOptionsResult {
   providers: AIProviderModelOptionResult[];
   default_model?: AIDefaultModelResult | null;
+  default_embedding_model?: AIDefaultModelResult | null;
 }
 
 export interface AIProviderListResult {
@@ -104,7 +107,7 @@ export interface AIDefaultModelParams {
 
 export interface AIDefaultModelResult extends AIDefaultModelParams {
   id: number;
-  scene: 'assistant';
+  scene: AIDefaultModelScene;
   provider_name: string;
   provider_type: AIProviderType;
   created_time: string;
@@ -171,10 +174,18 @@ export interface AIKnowledgeParams {
   source?: null | string;
 }
 
+export interface AIKnowledgeUploadOptions {
+  title?: string;
+  provider_id?: number;
+  model_id?: string;
+}
+
 export interface AIKnowledgeResult extends AIKnowledgeParams {
   id: number;
   user_id: number;
   object_key?: null | string;
+  provider_id?: null | number;
+  model_id?: null | string;
   created_time: string;
   updated_time?: null | string;
 }
@@ -203,6 +214,7 @@ export interface AISkillResult extends AISkillParams {
 interface AIAssistantQueryParams {
   name?: null | string;
   category?: null | string;
+  sort_type?: AIAssistantSortType;
   page?: number;
   size?: number;
 }
@@ -372,31 +384,58 @@ export async function deleteAIModelApi(pks: number[]) {
   });
 }
 
+function defaultModelPath(scene: AIDefaultModelScene) {
+  return `/api/v1/default-models/${scene}`;
+}
+
+export async function getAIDefaultModelApi(scene: AIDefaultModelScene) {
+  return requestClient.get<AIDefaultModelResult>(defaultModelPath(scene));
+}
+
+export async function getAIDefaultModelOptionalApi(
+  scene: AIDefaultModelScene,
+) {
+  const response = await fetch(resolveAIBuddyApiUrl(defaultModelPath(scene)), {
+    headers: getAIBuddyRequestHeaders(),
+    method: 'GET',
+  });
+
+  return readOptionalDefaultModelResponse<AIDefaultModelResult>(response);
+}
+
+export async function updateAIDefaultModelApi(
+  scene: AIDefaultModelScene,
+  data: AIDefaultModelParams,
+) {
+  return requestClient.put<AIActionResult>(defaultModelPath(scene), data);
+}
+
 export async function getAIAssistantDefaultModelApi() {
-  return requestClient.get<AIDefaultModelResult>(
-    '/api/v1/default-models/assistant',
-  );
+  return getAIDefaultModelApi('assistant');
 }
 
 export async function getAIAssistantDefaultModelOptionalApi() {
-  const response = await fetch(
-    resolveAIBuddyApiUrl('/api/v1/default-models/assistant'),
-    {
-      headers: getAIBuddyRequestHeaders(),
-      method: 'GET',
-    },
-  );
-
-  return readOptionalDefaultModelResponse<AIDefaultModelResult>(response);
+  return getAIDefaultModelOptionalApi('assistant');
 }
 
 export async function updateAIAssistantDefaultModelApi(
   data: AIDefaultModelParams,
 ) {
-  return requestClient.put<AIActionResult>(
-    '/api/v1/default-models/assistant',
-    data,
-  );
+  return updateAIDefaultModelApi('assistant', data);
+}
+
+export async function getAIEmbeddingDefaultModelApi() {
+  return getAIDefaultModelApi('embedding');
+}
+
+export async function getAIEmbeddingDefaultModelOptionalApi() {
+  return getAIDefaultModelOptionalApi('embedding');
+}
+
+export async function updateAIEmbeddingDefaultModelApi(
+  data: AIDefaultModelParams,
+) {
+  return updateAIDefaultModelApi('embedding', data);
 }
 
 export async function getAllAIQuickPhraseApi() {
@@ -464,10 +503,23 @@ export async function getAIKnowledgeListApi(params?: AIKnowledgeQueryParams) {
   );
 }
 
-export async function createAIKnowledgeApi(files: File[], title?: string) {
+export async function createAIKnowledgeApi(
+  files: File[],
+  options?: AIKnowledgeUploadOptions,
+) {
+  const fields: Record<string, string> = {};
+  if (options?.title) {
+    fields.title = options.title;
+  }
+  if (options?.provider_id != null) {
+    fields.provider_id = String(options.provider_id);
+  }
+  if (options?.model_id) {
+    fields.model_id = options.model_id;
+  }
   const { data, headers } = toUploadRequest(
     files,
-    title ? { title } : undefined,
+    Object.keys(fields).length > 0 ? fields : undefined,
   );
   return requestClient.post<AIActionResult>('/api/v1/knowledges', data, {
     headers,

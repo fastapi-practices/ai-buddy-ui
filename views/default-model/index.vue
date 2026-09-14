@@ -2,41 +2,60 @@
 import type {
   AIDefaultModelParams,
   AIDefaultModelResult,
+  AIDefaultModelScene,
   AIModelResult,
   AIProviderResult,
 } from '../../api';
 
-import { computed, onActivated, onMounted, ref, watch } from 'vue';
+import { computed, onActivated, onMounted, reactive, ref } from 'vue';
 
 import { Page, VbenButton } from '@vben/common-ui';
+import { $t } from '@vben/locales';
 
 import { message } from 'antdv-next';
 
 import {
-  getAIAssistantDefaultModelOptionalApi,
+  getAIDefaultModelOptionalApi,
   getAllAIModelApi,
   getAllAIProviderApi,
-  updateAIAssistantDefaultModelApi,
+  updateAIDefaultModelApi,
 } from '../../api';
 import { getProviderTypeLabel } from '../model-service/data';
 
-const providers = ref<AIProviderResult[]>([]);
-const models = ref<AIModelResult[]>([]);
-const selectedProviderId = ref<number>();
-const selectedModelId = ref<string>();
-const loading = ref(false);
-const modelsLoading = ref(false);
-const saving = ref(false);
+interface DefaultModelSceneForm {
+  fetchId: number;
+  modelId?: string;
+  models: AIModelResult[];
+  modelsLoading: boolean;
+  providerId?: number;
+  saving: boolean;
+}
 
-let currentModelFetchId = 0;
+const sceneMetas: { scene: AIDefaultModelScene }[] = [
+  { scene: 'assistant' },
+  { scene: 'embedding' },
+];
+
+function createSceneForm(): DefaultModelSceneForm {
+  return {
+    fetchId: 0,
+    models: [],
+    modelsLoading: false,
+    saving: false,
+  };
+}
+
+const providers = ref<AIProviderResult[]>([]);
+const loading = ref(false);
+const sceneForms = {
+  assistant: reactive(createSceneForm()),
+  embedding: reactive(createSceneForm()),
+};
+
 let hasInitialized = false;
 
 const enabledProviders = computed(() => {
   return providers.value.filter((item) => Number(item.status) === 1);
-});
-
-const enabledModels = computed(() => {
-  return models.value.filter((item) => Number(item.status) === 1);
 });
 
 const providerOptions = computed(() => {
@@ -46,70 +65,72 @@ const providerOptions = computed(() => {
   }));
 });
 
-const modelOptions = computed(() => {
-  return enabledModels.value.map((item) => ({
+function enabledModels(form: DefaultModelSceneForm) {
+  return form.models.filter((item) => Number(item.status) === 1);
+}
+
+function modelOptions(form: DefaultModelSceneForm) {
+  return enabledModels(form).map((item) => ({
     label: item.model_id,
     value: item.model_id,
   }));
-});
+}
 
-function applyDefaultModel(model: AIDefaultModelResult) {
-  selectedProviderId.value = model.provider_id;
-  selectedModelId.value = model.model_id;
+function applyDefaultModel(
+  form: DefaultModelSceneForm,
+  model: AIDefaultModelResult | null,
+) {
+  form.providerId = model?.provider_id;
+  form.modelId = model?.model_id;
 }
 
 async function fetchProviders() {
   providers.value = await getAllAIProviderApi();
 }
 
-async function fetchDefaultModel() {
+async function fetchDefaultModel(scene: AIDefaultModelScene) {
+  const form = sceneForms[scene];
   let model: AIDefaultModelResult | null;
   try {
-    model = await getAIAssistantDefaultModelOptionalApi();
+    model = await getAIDefaultModelOptionalApi(scene);
   } catch (error) {
     message.error((error as Error).message);
     throw error;
   }
 
-  if (model) {
-    applyDefaultModel(model);
-    return;
-  }
-
-  selectedProviderId.value = undefined;
-  selectedModelId.value = undefined;
+  applyDefaultModel(form, model);
 }
 
-async function fetchModelsByProvider(providerId?: number) {
-  const fetchId = ++currentModelFetchId;
+async function fetchModelsByProvider(scene: AIDefaultModelScene) {
+  const form = sceneForms[scene];
+  const fetchId = ++form.fetchId;
+  const providerId = form.providerId;
 
   if (!providerId) {
-    models.value = [];
-    selectedModelId.value = undefined;
+    form.models = [];
+    form.modelId = undefined;
     return;
   }
 
-  modelsLoading.value = true;
+  form.modelsLoading = true;
   try {
     const data = await getAllAIModelApi({ provider_id: providerId });
 
-    if (fetchId !== currentModelFetchId) {
+    if (fetchId !== form.fetchId) {
       return;
     }
 
-    models.value = data;
+    form.models = data;
 
     if (
-      selectedModelId.value &&
-      !enabledModels.value.some(
-        (item) => item.model_id === selectedModelId.value,
-      )
+      form.modelId &&
+      !enabledModels(form).some((item) => item.model_id === form.modelId)
     ) {
-      selectedModelId.value = undefined;
+      form.modelId = undefined;
     }
   } finally {
-    if (fetchId === currentModelFetchId) {
-      modelsLoading.value = false;
+    if (fetchId === form.fetchId) {
+      form.modelsLoading = false;
     }
   }
 }
@@ -118,42 +139,48 @@ async function refreshPage() {
   loading.value = true;
   try {
     await fetchProviders();
-    await fetchDefaultModel();
-    await fetchModelsByProvider(selectedProviderId.value);
+    await Promise.all(
+      sceneMetas.map(async ({ scene }) => {
+        await fetchDefaultModel(scene);
+        await fetchModelsByProvider(scene);
+      }),
+    );
   } finally {
     loading.value = false;
   }
 }
 
-async function submitDefaultModel() {
-  if (!selectedProviderId.value || !selectedModelId.value) {
-    message.warning('请选择供应商和模型');
+async function onProviderChange(scene: AIDefaultModelScene) {
+  sceneForms[scene].modelId = undefined;
+  await fetchModelsByProvider(scene);
+}
+
+async function submitDefaultModel(scene: AIDefaultModelScene) {
+  const form = sceneForms[scene];
+  if (!form.providerId || !form.modelId) {
+    message.warning($t('ai-buddy.defaultModelManage.selectRequired'));
     return;
   }
 
   const payload: AIDefaultModelParams = {
-    model_id: selectedModelId.value,
-    provider_id: selectedProviderId.value,
+    model_id: form.modelId,
+    provider_id: form.providerId,
     status: 1,
   };
 
-  saving.value = true;
+  form.saving = true;
   try {
-    await updateAIAssistantDefaultModelApi(payload);
-    message.success('默认助手模型已更新');
-    await fetchDefaultModel();
+    await updateAIDefaultModelApi(scene, payload);
+    message.success(
+      scene === 'assistant'
+        ? $t('ai-buddy.defaultModelManage.assistantUpdated')
+        : $t('ai-buddy.defaultModelManage.embeddingUpdated'),
+    );
+    await fetchDefaultModel(scene);
   } finally {
-    saving.value = false;
+    form.saving = false;
   }
 }
-
-watch(
-  selectedProviderId,
-  async (providerId) => {
-    await fetchModelsByProvider(providerId);
-  },
-  { immediate: true },
-);
 
 onMounted(async () => {
   await refreshPage();
@@ -172,46 +199,72 @@ onActivated(async () => {
 <template>
   <Page auto-content-height>
     <div class="flex h-full flex-col gap-4">
-      <a-card :loading="loading" title="默认助手模型">
+      <a-card
+        v-for="meta in sceneMetas"
+        :key="meta.scene"
+        :loading="loading"
+        :title="
+          meta.scene === 'assistant'
+            ? $t('ai-buddy.defaultModelManage.assistantTitle')
+            : $t('ai-buddy.defaultModelManage.embeddingTitle')
+        "
+      >
         <div class="flex flex-col gap-4">
           <a-alert show-icon type="info">
             <template #message>
-              默认助手模型会作为 Buddy
-              客户端新对话的初始供应商与模型，已进入历史会话后仍以会话自身模型为准
+              {{
+                meta.scene === 'assistant'
+                  ? $t('ai-buddy.defaultModelManage.assistantHelp')
+                  : $t('ai-buddy.defaultModelManage.embeddingHelp')
+              }}
             </template>
           </a-alert>
 
           <div class="grid gap-4 md:grid-cols-2">
             <div>
-              <div class="mb-2 text-sm font-medium text-foreground">供应商</div>
+              <div class="mb-2 text-sm font-medium text-foreground">
+                {{ $t('ai-buddy.defaultModelManage.provider') }}
+              </div>
               <a-select
-                v-model:value="selectedProviderId"
+                v-model:value="sceneForms[meta.scene].providerId"
                 class="w-full"
-                :disabled="saving"
+                :disabled="sceneForms[meta.scene].saving"
                 :options="providerOptions"
-                placeholder="请选择供应商"
+                :placeholder="
+                  $t('ai-buddy.defaultModelManage.providerPlaceholder')
+                "
+                @change="() => onProviderChange(meta.scene)"
               />
             </div>
             <div>
-              <div class="mb-2 text-sm font-medium text-foreground">模型</div>
+              <div class="mb-2 text-sm font-medium text-foreground">
+                {{ $t('ai-buddy.defaultModelManage.model') }}
+              </div>
               <a-select
-                v-model:value="selectedModelId"
+                v-model:value="sceneForms[meta.scene].modelId"
                 class="w-full"
-                :disabled="saving || !selectedProviderId"
-                :loading="modelsLoading"
-                :options="modelOptions"
-                placeholder="请选择模型"
+                :disabled="
+                  sceneForms[meta.scene].saving ||
+                  !sceneForms[meta.scene].providerId
+                "
+                :loading="sceneForms[meta.scene].modelsLoading"
+                :options="modelOptions(sceneForms[meta.scene])"
+                :placeholder="$t('ai-buddy.defaultModelManage.modelPlaceholder')"
               />
             </div>
           </div>
 
           <div class="flex justify-end gap-2">
             <VbenButton
-              :loading="saving"
+              :loading="sceneForms[meta.scene].saving"
               type="primary"
-              @click="submitDefaultModel"
+              @click="submitDefaultModel(meta.scene)"
             >
-              保存默认模型
+              {{
+                meta.scene === 'assistant'
+                  ? $t('ai-buddy.defaultModelManage.saveAssistant')
+                  : $t('ai-buddy.defaultModelManage.saveEmbedding')
+              }}
             </VbenButton>
           </div>
         </div>

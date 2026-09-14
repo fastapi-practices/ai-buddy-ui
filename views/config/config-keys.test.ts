@@ -14,8 +14,6 @@ const allConfigRows = [
   { key: 'AI_TAVILY_API_KEY', value: 'tvly' },
   { key: 'AI_QDRANT_URL', value: 'http://localhost:6333' },
   { key: 'AI_QDRANT_API_KEY', value: 'qdrant' },
-  { key: 'AI_EMBEDDING_API_KEY', value: 'embed' },
-  { key: 'AI_EMBEDDING_API_HOST', value: 'https://api.openai.com/v1' },
   { key: 'AI_ADVISOR_MODEL', value: 'gpt-test' },
   { key: 'AI_USAGE_REQUEST_LIMIT', value: '20' },
   { key: 'AI_USAGE_TOOL_CALLS_LIMIT', value: '40' },
@@ -33,8 +31,6 @@ describe('pickEditableAIConfigs', () => {
       'AI_TAVILY_API_KEY',
       'AI_QDRANT_URL',
       'AI_QDRANT_API_KEY',
-      'AI_EMBEDDING_API_KEY',
-      'AI_EMBEDDING_API_HOST',
     ]);
 
     expect(pickEditableAIConfigs(allConfigRows).map((item) => item.key)).toEqual(
@@ -44,8 +40,6 @@ describe('pickEditableAIConfigs', () => {
         'AI_TAVILY_API_KEY',
         'AI_QDRANT_URL',
         'AI_QDRANT_API_KEY',
-        'AI_EMBEDDING_API_KEY',
-        'AI_EMBEDDING_API_HOST',
       ],
     );
   });
@@ -57,14 +51,13 @@ describe('pickEditableAIConfigs', () => {
     expect(pickRagConfigs(allConfigRows).map((item) => item.key)).toEqual([
       'AI_QDRANT_URL',
       'AI_QDRANT_API_KEY',
-      'AI_EMBEDDING_API_KEY',
-      'AI_EMBEDDING_API_HOST',
     ]);
   });
 
   it('rejects client preference and server-only keys', () => {
     expect(isEditableAIConfigKey('AI_EXA_API_KEY')).toBe(true);
     expect(isEditableAIConfigKey('AI_QDRANT_URL')).toBe(true);
+    expect(isEditableAIConfigKey('AI_EMBEDDING_API_KEY')).toBe(false);
     expect(isEditableAIConfigKey('AI_ADVISOR_MODEL')).toBe(false);
     expect(isEditableAIConfigKey('AI_USAGE_REQUEST_LIMIT')).toBe(false);
     expect(isEditableAIConfigKey('AI_SPEND_DAILY_USD')).toBe(false);

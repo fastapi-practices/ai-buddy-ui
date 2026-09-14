@@ -66,7 +66,7 @@ export async function readOptionalDefaultModelResponse<T>(
   }
 
   if (payload.code !== 200 || !payload.data) {
-    throw new Error(payload.msg || '获取默认助手模型失败');
+    throw new Error(payload.msg || '获取默认模型失败');
   }
 
   return payload.data;

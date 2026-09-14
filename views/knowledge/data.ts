@@ -41,6 +41,13 @@ export function useKnowledgeColumns(
       align: 'left',
     },
     {
+      field: 'model_id',
+      title: $t('ai-buddy.knowledgeManage.embeddingModel'),
+      width: 180,
+      align: 'left',
+      formatter: ({ cellValue }) => cellValue || '-',
+    },
+    {
       field: 'created_time',
       title: $t('common.table.created_time'),
       width: 168,
