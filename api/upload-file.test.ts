@@ -82,16 +82,24 @@ describe('sanitizeUploadFiles', () => {
 });
 
 describe('takeKnowledgeUploadFiles', () => {
-  it('keeps markdown, text, and zip files', () => {
+  it('keeps markdown, office, image, and zip files', () => {
     expect(
       takeKnowledgeUploadFiles([
         createFile('notes.md', 'docs/notes.md'),
         createFile('readme.txt'),
+        createFile('spec.pdf'),
         createFile('archive.zip'),
         createFile('image.png'),
+        createFile('binary.bin'),
         createFile('.DS_Store'),
       ]).map((file) => file.name),
-    ).toEqual(['notes.md', 'readme.txt', 'archive.zip']);
+    ).toEqual([
+      'notes.md',
+      'readme.txt',
+      'spec.pdf',
+      'archive.zip',
+      'image.png',
+    ]);
   });
 });
 
@@ -113,7 +121,8 @@ describe('upload issues', () => {
   it('rejects empty or unsupported knowledge files', () => {
     expect(getKnowledgeUploadIssue([])).toBe('empty');
     expect(getKnowledgeUploadIssue([createFile('notes.md')])).toBeUndefined();
-    expect(getKnowledgeUploadIssue([createFile('image.png')])).toBe(
+    expect(getKnowledgeUploadIssue([createFile('image.png')])).toBeUndefined();
+    expect(getKnowledgeUploadIssue([createFile('binary.bin')])).toBe(
       'unsupported',
     );
   });

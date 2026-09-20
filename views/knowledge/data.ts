@@ -1,20 +1,22 @@
-import type { AIKnowledgeResult } from '../../api';
+import type { AIKnowledgeBaseResult } from '../../api';
 
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import { ownerColumn } from '../owner';
+
 export const queryKnowledgeSchema: VbenFormSchema[] = [
   {
     component: 'Input',
-    fieldName: 'title',
-    label: $t('ai-buddy.knowledgeManage.title'),
+    fieldName: 'name',
+    label: $t('ai-buddy.knowledgeManage.name'),
   },
 ];
 
 export function useKnowledgeColumns(
-  onActionClick?: OnActionClickFn<AIKnowledgeResult>,
+  onActionClick?: OnActionClickFn<AIKnowledgeBaseResult>,
 ): VxeGridProps['columns'] {
   return [
     {
@@ -24,20 +26,15 @@ export function useKnowledgeColumns(
       width: 50,
     },
     {
-      field: 'title',
-      title: $t('ai-buddy.knowledgeManage.title'),
+      field: 'name',
+      title: $t('ai-buddy.knowledgeManage.name'),
       width: 220,
       align: 'left',
     },
+    ownerColumn(),
     {
-      field: 'source',
-      title: $t('ai-buddy.knowledgeManage.source'),
-      align: 'left',
-    },
-    {
-      field: 'object_key',
-      title: $t('ai-buddy.knowledgeManage.objectKey'),
-      width: 260,
+      field: 'description',
+      title: $t('ai-buddy.knowledgeManage.description'),
       align: 'left',
     },
     {
@@ -60,13 +57,63 @@ export function useKnowledgeColumns(
       width: 240,
       cellRender: {
         attrs: {
-          nameField: 'title',
+          nameField: 'name',
           nameTitle: $t('ai-buddy.knowledge'),
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: ['delete'],
+        options: [
+          {
+            code: 'documents',
+            text: $t('ai-buddy.knowledgeManage.documents'),
+          },
+          'edit',
+          'delete',
+        ],
       },
+    },
+  ];
+}
+
+export function createKnowledgeBaseSchema(
+  providerOptions: { label: string; value: number }[],
+  modelOptions: { label: string; value: string }[],
+  onProviderChange?: (providerId?: number) => void,
+): VbenFormSchema[] {
+  return [
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: $t('ai-buddy.knowledgeManage.name'),
+      rules: 'required',
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'description',
+      label: $t('ai-buddy.knowledgeManage.description'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        class: 'w-full',
+        options: providerOptions,
+        onChange: (value: number | undefined) => onProviderChange?.(value),
+      },
+      fieldName: 'provider_id',
+      help: $t('ai-buddy.knowledgeManage.embeddingHelp'),
+      label: $t('ai-buddy.knowledgeManage.embeddingProvider'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        class: 'w-full',
+        options: modelOptions,
+      },
+      fieldName: 'model_id',
+      help: $t('ai-buddy.knowledgeManage.embeddingHelp'),
+      label: $t('ai-buddy.knowledgeManage.embeddingModel'),
     },
   ];
 }

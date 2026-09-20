@@ -187,27 +187,46 @@ export interface AIMcpResult extends AIMcpParams {
   updated_time?: null | string;
 }
 
-interface AIKnowledgeQueryParams {
+interface AIKnowledgeBaseQueryParams {
+  name?: null | string;
+  page?: number;
+  size?: number;
+}
+
+export interface AIKnowledgeBaseParams {
+  name: string;
+  description?: null | string;
+  provider_id?: null | number;
+  model_id?: null | string;
+}
+
+export interface AIKnowledgeBaseResult extends AIKnowledgeBaseParams {
+  id: number;
+  user_id: number;
+  created_time: string;
+  updated_time?: null | string;
+}
+
+interface AIKnowledgeDocumentQueryParams {
   title?: null | string;
   page?: number;
   size?: number;
 }
 
-export interface AIKnowledgeParams {
-  title: string;
-  content: string;
-  source?: null | string;
-}
-
-export interface AIKnowledgeUploadOptions {
+export interface AIKnowledgeDocumentUploadOptions {
   title?: string;
   provider_id?: number;
   model_id?: string;
 }
 
-export interface AIKnowledgeResult extends AIKnowledgeParams {
+export interface AIKnowledgeDocumentResult {
   id: number;
   user_id: number;
+  knowledge_base_id: number;
+  title: string;
+  source?: null | string;
+  file_type: string;
+  content: string;
   object_key?: null | string;
   provider_id?: null | number;
   model_id?: null | string;
@@ -487,20 +506,67 @@ export async function deleteAIMcpApi(pk: number) {
   return requestClient.delete<AIActionResult>(`/api/v1/mcps/${pk}`);
 }
 
-export async function getAIKnowledgeDetailApi(pk: number) {
-  return requestClient.get<AIKnowledgeResult>(`/api/v1/knowledges/${pk}`);
+export async function getAllAIKnowledgeBaseApi() {
+  return requestClient.get<AIKnowledgeBaseResult[]>('/api/v1/knowledges/all');
 }
 
-export async function getAIKnowledgeListApi(params?: AIKnowledgeQueryParams) {
-  return requestClient.get<PaginationResult<AIKnowledgeResult>>(
+export async function getAIKnowledgeBaseDetailApi(pk: number) {
+  return requestClient.get<AIKnowledgeBaseResult>(`/api/v1/knowledges/${pk}`);
+}
+
+export async function getAIKnowledgeBaseListApi(
+  params?: AIKnowledgeBaseQueryParams,
+) {
+  return requestClient.get<PaginationResult<AIKnowledgeBaseResult>>(
     '/api/v1/knowledges',
     { params },
   );
 }
 
-export async function createAIKnowledgeApi(
+export async function createAIKnowledgeBaseApi(data: AIKnowledgeBaseParams) {
+  return requestClient.post<AIActionResult>('/api/v1/knowledges', data);
+}
+
+export async function updateAIKnowledgeBaseApi(
+  pk: number,
+  data: AIKnowledgeBaseParams,
+) {
+  return requestClient.put<AIActionResult>(`/api/v1/knowledges/${pk}`, data);
+}
+
+export async function deleteAIKnowledgeBaseApi(pk: number) {
+  return requestClient.delete<AIActionResult>(`/api/v1/knowledges/${pk}`);
+}
+
+export async function getAllAIKnowledgeDocumentApi(pk: number) {
+  return requestClient.get<AIKnowledgeDocumentResult[]>(
+    `/api/v1/knowledges/${pk}/documents/all`,
+  );
+}
+
+export async function getAIKnowledgeDocumentDetailApi(
+  pk: number,
+  docId: number,
+) {
+  return requestClient.get<AIKnowledgeDocumentResult>(
+    `/api/v1/knowledges/${pk}/documents/${docId}`,
+  );
+}
+
+export async function getAIKnowledgeDocumentListApi(
+  pk: number,
+  params?: AIKnowledgeDocumentQueryParams,
+) {
+  return requestClient.get<PaginationResult<AIKnowledgeDocumentResult>>(
+    `/api/v1/knowledges/${pk}/documents`,
+    { params },
+  );
+}
+
+export async function createAIKnowledgeDocumentApi(
+  pk: number,
   files: File[],
-  options?: AIKnowledgeUploadOptions,
+  options?: AIKnowledgeDocumentUploadOptions,
 ) {
   const fields: Record<string, string> = {};
   if (options?.title) {
@@ -516,13 +582,17 @@ export async function createAIKnowledgeApi(
     files,
     Object.keys(fields).length > 0 ? fields : undefined,
   );
-  return requestClient.post<AIActionResult>('/api/v1/knowledges', data, {
-    headers,
-  });
+  return requestClient.post<AIActionResult>(
+    `/api/v1/knowledges/${pk}/documents`,
+    data,
+    { headers },
+  );
 }
 
-export async function deleteAIKnowledgeApi(pk: number) {
-  return requestClient.delete<AIActionResult>(`/api/v1/knowledges/${pk}`);
+export async function deleteAIKnowledgeDocumentApi(pk: number, docId: number) {
+  return requestClient.delete<AIActionResult>(
+    `/api/v1/knowledges/${pk}/documents/${docId}`,
+  );
 }
 
 export async function getAISkillDetailApi(pk: number) {
