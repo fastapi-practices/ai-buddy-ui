@@ -1,5 +1,8 @@
 {
   "menu": "AI Buddy",
+  "owner": "归属",
+  "builtin": "内置",
+  "userOwned": "用户",
   "default_model": "默认模型",
   "defaultModelManage": {
     "assistantTitle": "默认助手模型",

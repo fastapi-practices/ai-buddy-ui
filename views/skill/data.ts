@@ -5,6 +5,8 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import { ownerColumn } from '../owner';
+
 export const querySkillSchema: VbenFormSchema[] = [
   {
     component: 'Input',
@@ -29,6 +31,7 @@ export function useSkillColumns(
       width: 220,
       align: 'left',
     },
+    ownerColumn(),
     {
       field: 'version',
       title: $t('ai-buddy.skillManage.version'),

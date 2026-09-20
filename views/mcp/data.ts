@@ -5,6 +5,7 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import { ownerColumn } from '../owner';
 import { getDefaultMcpType, MCP_STDIO_TYPE } from './mcp-params';
 
 export const MCP_TYPE_OPTIONS = [
@@ -58,6 +59,7 @@ export function useMcpColumns(
       width: 50,
     },
     { field: 'name', title: '名称', width: 180, align: 'left' },
+    ownerColumn(),
     {
       field: 'type',
       title: '类型',

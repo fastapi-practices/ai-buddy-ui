@@ -5,6 +5,8 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import { ownerColumn } from '../owner';
+
 const assistantCategoryOptions = [
   { label: '效率办公', value: 'efficiency' },
   { label: '写作创作', value: 'writing' },
@@ -51,6 +53,7 @@ export function useAssistantColumns(
       minWidth: 180,
       align: 'left',
     },
+    ownerColumn(),
     {
       field: 'category',
       title: $t('ai-buddy.assistantManage.category'),

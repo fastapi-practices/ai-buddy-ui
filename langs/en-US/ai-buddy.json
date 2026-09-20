@@ -1,5 +1,8 @@
 {
   "menu": "AI Buddy",
+  "owner": "Owner",
+  "builtin": "Built-in",
+  "userOwned": "User",
   "default_model": "Default Model",
   "defaultModelManage": {
     "assistantTitle": "Default Assistant Model",

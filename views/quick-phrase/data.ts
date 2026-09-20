@@ -5,6 +5,8 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import { ownerColumn } from '../owner';
+
 export const queryQuickPhraseSchema: VbenFormSchema[] = [
   {
     component: 'Input',
@@ -24,6 +26,7 @@ export function useQuickPhraseColumns(
       width: 50,
     },
     { field: 'title', title: '短语标题', width: 180, align: 'left' },
+    ownerColumn(),
     { field: 'content', title: '短语内容', align: 'left' },
     { field: 'sort', title: '排序', width: 100 },
     {
