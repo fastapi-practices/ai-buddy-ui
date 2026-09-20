@@ -4,13 +4,17 @@ import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
 import { Page } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
+import Jev from './jev.vue';
 import Rag from './rag.vue';
+import Runtime from './runtime.vue';
 import SearchEngine from './search-engine.vue';
 
 const activeKey = ref('0');
 
 const searchEngineRef = ref();
 const ragRef = ref();
+const runtimeRef = ref();
+const jevRef = ref();
 
 const tabItems = computed(() => [
   {
@@ -22,6 +26,16 @@ const tabItems = computed(() => [
     key: '1',
     label: $t('ai-buddy.rag'),
     icon: () => h('span', { class: 'icon-[carbon--data-base] -mb-1 size-5' }),
+  },
+  {
+    key: '2',
+    label: $t('ai-buddy.runtime'),
+    icon: () => h('span', { class: 'icon-[carbon--settings] -mb-1 size-5' }),
+  },
+  {
+    key: '3',
+    label: $t('ai-buddy.jev'),
+    icon: () => h('span', { class: 'icon-[carbon--security] -mb-1 size-5' }),
   },
 ]);
 
@@ -36,6 +50,18 @@ watch(activeKey, async (newValue) => {
     await nextTick();
     if (ragRef.value) {
       await ragRef.value.fetchConfigList();
+    }
+  }
+  if (newValue === '2') {
+    await nextTick();
+    if (runtimeRef.value) {
+      await runtimeRef.value.fetchConfigList();
+    }
+  }
+  if (newValue === '3') {
+    await nextTick();
+    if (jevRef.value) {
+      await jevRef.value.fetchConfigList();
     }
   }
 });
@@ -65,6 +91,8 @@ onMounted(async () => {
         <template #contentRender="{ item }">
           <SearchEngine v-if="item.key === '0'" ref="searchEngineRef" />
           <Rag v-else-if="item.key === '1'" ref="ragRef" />
+          <Runtime v-else-if="item.key === '2'" ref="runtimeRef" />
+          <Jev v-else-if="item.key === '3'" ref="jevRef" />
         </template>
       </a-tabs>
     </a-card>

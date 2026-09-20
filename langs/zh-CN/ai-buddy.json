@@ -32,6 +32,8 @@
   "config": "AI 配置",
   "searchEngine": "搜索引擎配置",
   "rag": "RAG 配置",
+  "runtime": "运行配置",
+  "jev": "Jev 护栏",
   "knowledge": "知识库",
   "skill": "技能",
   "assistant": "助手",

@@ -32,6 +32,8 @@
   "config": "AI Config",
   "searchEngine": "Search Engine",
   "rag": "RAG",
+  "runtime": "Runtime",
+  "jev": "Jev Guardrails",
   "knowledge": "Knowledge Base",
   "skill": "Skills",
   "assistant": "Assistants",
