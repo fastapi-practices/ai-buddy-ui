@@ -79,7 +79,7 @@ const saveJevConfig = async () => {
   configData.value.forEach((config) => {
     if (Object.prototype.hasOwnProperty.call(data, config.key)) {
       const value = data[config.key];
-      config.value = value == null ? '' : String(value);
+      config.value = value === null || value === undefined ? '' : String(value);
     }
   });
 

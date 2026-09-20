@@ -1,5 +1,5 @@
 export function formatOnnxSize(sizeGb: number | null | undefined): string {
-  if (sizeGb == null || Number.isNaN(Number(sizeGb))) {
+  if (sizeGb === null || sizeGb === undefined || Number.isNaN(Number(sizeGb))) {
     return '大小未知';
   }
   const gb = Number(sizeGb);

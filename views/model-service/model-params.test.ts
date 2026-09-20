@@ -7,7 +7,7 @@ describe('createAIModelPayload', () => {
     expect(
       createAIModelPayload(7, {
         capabilities: ['tools', 'text'],
-        context_window: 128000,
+        context_window: 128_000,
         kind: 'chat',
         max_output_tokens: 0,
         model_id: '  gpt-test  ',
@@ -18,7 +18,7 @@ describe('createAIModelPayload', () => {
       }),
     ).toEqual({
       capabilities: ['tools', 'text'],
-      context_window: 128000,
+      context_window: 128_000,
       kind: 'chat',
       max_output_tokens: null,
       model_id: 'gpt-test',

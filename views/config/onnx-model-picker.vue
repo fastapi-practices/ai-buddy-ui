@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AIOnnxOption } from '../../api';
+import type { OnnxPickerContext } from './onnx-picker-context';
 
 import { computed, inject } from 'vue';
 
@@ -9,7 +10,6 @@ import {
   OCR_ONNX_PICKER_KEY,
   ONNX_PICKER_KEY,
   PADDLEOCR_PICKER_KEY,
-  type OnnxPickerContext,
 } from './onnx-picker-context';
 import { formatOnnxSize } from './onnx-size';
 
@@ -42,14 +42,17 @@ const emit = defineEmits<{
   'update:value': [string];
 }>();
 
-const ctx = inject<OnnxPickerContext | null>(
-  props.source === 'ocr'
-    ? OCR_ONNX_PICKER_KEY
-    : props.source === 'paddleocr'
-      ? PADDLEOCR_PICKER_KEY
-      : ONNX_PICKER_KEY,
-  null,
-);
+function pickerKey() {
+  if (props.source === 'ocr') {
+    return OCR_ONNX_PICKER_KEY;
+  }
+  if (props.source === 'paddleocr') {
+    return PADDLEOCR_PICKER_KEY;
+  }
+  return ONNX_PICKER_KEY;
+}
+
+const ctx = inject<OnnxPickerContext | null>(pickerKey(), null);
 const models = computed(() =>
   props.models?.length ? props.models : (ctx?.models.value ?? []),
 );
