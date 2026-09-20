@@ -701,10 +701,77 @@ export async function deleteAIAssistantApi(pk: number) {
   return requestClient.delete<AIActionResult>(`/api/v1/assistants/${pk}`);
 }
 
+export interface AIOnnxOption {
+  id: string;
+  name: string;
+  size_gb: null | number;
+  downloaded: boolean;
+}
+
+export interface AIOnnxCatalog {
+  embedding: AIOnnxOption[];
+  ocr: AIOnnxOption[];
+  paddleocr: AIOnnxOption[];
+  cache_dir: string;
+  ocr_cache_dir: string;
+  paddleocr_cache_dir: string;
+}
+
+export interface AIOnnxDownloadStatus {
+  status: 'done' | 'downloading' | 'failed' | 'idle';
+  progress: number;
+  model_id: string;
+  error: null | string;
+  cache_dir: string;
+}
+
 export async function getAllAIConfigApi() {
   return requestClient.get<AIConfigResult[]>('/api/v1/sys/configs/all', {
     params: { type: 'AI' },
   });
+}
+
+export async function getAIOnnxOptionsApi() {
+  return requestClient.get<AIOnnxCatalog>('/api/v1/knowledges/onnx-options');
+}
+
+export async function downloadAIOnnxModelApi(modelId: string) {
+  return requestClient.post<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/onnx-download',
+    { model_id: modelId },
+  );
+}
+
+export async function getAIOnnxDownloadStatusApi() {
+  return requestClient.get<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/onnx-download-status',
+  );
+}
+
+export async function downloadAIOcrOnnxModelApi(modelId: string) {
+  return requestClient.post<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/ocr-onnx-download',
+    { model_id: modelId },
+  );
+}
+
+export async function getAIOcrOnnxDownloadStatusApi() {
+  return requestClient.get<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/ocr-onnx-download-status',
+  );
+}
+
+export async function downloadAIPaddleocrModelApi(modelId: string) {
+  return requestClient.post<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/paddleocr-download',
+    { model_id: modelId },
+  );
+}
+
+export async function getAIPaddleocrDownloadStatusApi() {
+  return requestClient.get<AIOnnxDownloadStatus>(
+    '/api/v1/knowledges/paddleocr-download-status',
+  );
 }
 
 export async function updateAIConfigApi(params: AIConfigParams[]) {
@@ -737,6 +804,7 @@ export async function updateAIExpertApi(pk: number, data: AIExpertParams) {
 export async function deleteAIExpertApi(pk: number) {
   return requestClient.delete<AIActionResult>(`/api/v1/experts/${pk}`);
 }
+
 export async function getAllAISubagentApi() {
   return requestClient.get<AISubagentResult[]>('/api/v1/subagents/all');
 }
