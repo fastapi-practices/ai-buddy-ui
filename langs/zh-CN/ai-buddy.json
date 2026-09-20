@@ -36,6 +36,7 @@
   "skill": "技能",
   "assistant": "助手",
   "expert": "专家",
+  "subagent": "子代理",
   "upload": {
     "import": "导入",
     "dropHint": "拖拽文件或点击上传",
@@ -103,5 +104,11 @@
     "knowledge": "默认知识库",
     "sort": "排序",
     "usageCount": "使用次数"
+  },
+  "subagentManage": {
+    "name": "名称",
+    "description": "描述",
+    "prompt": "提示词",
+    "sort": "排序"
   }
 }

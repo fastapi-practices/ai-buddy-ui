@@ -85,6 +85,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    name: 'AIBuddySubagentManage',
+    path: '/plugins/ai-buddy/subagent',
+    component: () => import('../views/subagent/index.vue'),
+    meta: {
+      title: $t('ai-buddy.subagent'),
+      icon: 'mdi:sitemap-outline',
+    },
+  },
+  {
     name: 'AIBuddyConfigManage',
     path: '/plugins/ai-buddy/config',
     component: () => import('../views/config/index.vue'),

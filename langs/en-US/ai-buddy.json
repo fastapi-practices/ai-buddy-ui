@@ -36,6 +36,7 @@
   "skill": "Skills",
   "assistant": "Assistants",
   "expert": "Experts",
+  "subagent": "Subagents",
   "upload": {
     "import": "Import",
     "dropHint": "Drop files here or click to upload",
@@ -103,5 +104,11 @@
     "knowledge": "Default Knowledge Bases",
     "sort": "Sort",
     "usageCount": "Usage Count"
+  },
+  "subagentManage": {
+    "name": "Name",
+    "description": "Description",
+    "prompt": "Prompt",
+    "sort": "Sort"
   }
 }

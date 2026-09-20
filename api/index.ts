@@ -311,6 +311,26 @@ export interface AIExpertResult extends AIExpertParams {
   updated_time?: null | string;
 }
 
+interface AISubagentQueryParams {
+  name?: null | string;
+  page?: number;
+  size?: number;
+}
+
+export interface AISubagentParams {
+  name: string;
+  description: string;
+  prompt: string;
+  sort?: number;
+}
+
+export interface AISubagentResult extends AISubagentParams {
+  id: number;
+  user_id: number;
+  created_time: string;
+  updated_time?: null | string;
+}
+
 export interface AIConfigParams {
   id: string;
   name: string;
@@ -717,4 +737,29 @@ export async function updateAIExpertApi(pk: number, data: AIExpertParams) {
 export async function deleteAIExpertApi(pk: number) {
   return requestClient.delete<AIActionResult>(`/api/v1/experts/${pk}`);
 }
+export async function getAllAISubagentApi() {
+  return requestClient.get<AISubagentResult[]>('/api/v1/subagents/all');
+}
 
+export async function getAISubagentDetailApi(pk: number) {
+  return requestClient.get<AISubagentResult>(`/api/v1/subagents/${pk}`);
+}
+
+export async function getAISubagentListApi(params?: AISubagentQueryParams) {
+  return requestClient.get<PaginationResult<AISubagentResult>>(
+    '/api/v1/subagents',
+    { params },
+  );
+}
+
+export async function createAISubagentApi(data: AISubagentParams) {
+  return requestClient.post<AIActionResult>('/api/v1/subagents', data);
+}
+
+export async function updateAISubagentApi(pk: number, data: AISubagentParams) {
+  return requestClient.put<AIActionResult>(`/api/v1/subagents/${pk}`, data);
+}
+
+export async function deleteAISubagentApi(pk: number) {
+  return requestClient.delete<AIActionResult>(`/api/v1/subagents/${pk}`);
+}
