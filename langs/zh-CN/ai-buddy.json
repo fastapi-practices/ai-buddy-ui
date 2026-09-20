@@ -35,6 +35,7 @@
   "knowledge": "知识库",
   "skill": "技能",
   "assistant": "助手",
+  "expert": "专家",
   "upload": {
     "import": "导入",
     "dropHint": "拖拽文件或点击上传",
@@ -89,5 +90,18 @@
     "sort": "排序",
     "usageCount": "使用次数",
     "deleteConfirm": "确定删除 {0} 吗？"
+  },
+  "expertManage": {
+    "name": "名称",
+    "description": "描述",
+    "prompt": "提示词",
+    "starters": "开场白",
+    "starterPlaceholder": "用户进入对话时可点选的开场白",
+    "addStarter": "添加开场白",
+    "mcp": "默认 MCP",
+    "skill": "默认技能",
+    "knowledge": "默认知识库",
+    "sort": "排序",
+    "usageCount": "使用次数"
   }
 }

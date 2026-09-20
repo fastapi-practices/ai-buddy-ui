@@ -286,6 +286,31 @@ export interface AIAssistantCategoryResult {
   sort: number;
 }
 
+interface AIExpertQueryParams {
+  name?: null | string;
+  page?: number;
+  size?: number;
+}
+
+export interface AIExpertParams {
+  name: string;
+  prompt: string;
+  description?: null | string;
+  starters?: string[];
+  mcp_ids?: number[];
+  skill_ids?: number[];
+  knowledge_ids?: number[];
+  sort?: number;
+}
+
+export interface AIExpertResult extends AIExpertParams {
+  id: number;
+  user_id: number;
+  usage_count: number;
+  created_time: string;
+  updated_time?: null | string;
+}
+
 export interface AIConfigParams {
   id: string;
   name: string;
@@ -599,6 +624,10 @@ export async function getAISkillDetailApi(pk: number) {
   return requestClient.get<AISkillResult>(`/api/v1/skills/${pk}`);
 }
 
+export async function getAllAISkillApi() {
+  return requestClient.get<AISkillResult[]>('/api/v1/skills/all');
+}
+
 export async function getAISkillListApi(params?: AISkillQueryParams) {
   return requestClient.get<PaginationResult<AISkillResult>>('/api/v1/skills', {
     params,
@@ -618,6 +647,10 @@ export async function deleteAISkillApi(pk: number) {
 
 export async function getAIAssistantDetailApi(pk: number) {
   return requestClient.get<AIAssistantResult>(`/api/v1/assistants/${pk}`);
+}
+
+export async function getAllAIAssistantApi() {
+  return requestClient.get<AIAssistantResult[]>('/api/v1/assistants/all');
 }
 
 export async function getAIAssistantCategoriesApi() {
@@ -657,3 +690,31 @@ export async function getAllAIConfigApi() {
 export async function updateAIConfigApi(params: AIConfigParams[]) {
   return requestClient.put('/api/v1/sys/configs', params);
 }
+
+export async function getAllAIExpertApi() {
+  return requestClient.get<AIExpertResult[]>('/api/v1/experts/all');
+}
+
+export async function getAIExpertDetailApi(pk: number) {
+  return requestClient.get<AIExpertResult>(`/api/v1/experts/${pk}`);
+}
+
+export async function getAIExpertListApi(params?: AIExpertQueryParams) {
+  return requestClient.get<PaginationResult<AIExpertResult>>(
+    '/api/v1/experts',
+    { params },
+  );
+}
+
+export async function createAIExpertApi(data: AIExpertParams) {
+  return requestClient.post<AIActionResult>('/api/v1/experts', data);
+}
+
+export async function updateAIExpertApi(pk: number, data: AIExpertParams) {
+  return requestClient.put<AIActionResult>(`/api/v1/experts/${pk}`, data);
+}
+
+export async function deleteAIExpertApi(pk: number) {
+  return requestClient.delete<AIActionResult>(`/api/v1/experts/${pk}`);
+}
+

@@ -76,6 +76,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    name: 'AIBuddyExpertManage',
+    path: '/plugins/ai-buddy/expert',
+    component: () => import('../views/expert/index.vue'),
+    meta: {
+      title: $t('ai-buddy.expert'),
+      icon: 'mdi:account-star-outline',
+    },
+  },
+  {
     name: 'AIBuddyConfigManage',
     path: '/plugins/ai-buddy/config',
     component: () => import('../views/config/index.vue'),

@@ -35,6 +35,7 @@
   "knowledge": "Knowledge Base",
   "skill": "Skills",
   "assistant": "Assistants",
+  "expert": "Experts",
   "upload": {
     "import": "Import",
     "dropHint": "Drop files here or click to upload",
@@ -89,5 +90,18 @@
     "sort": "Sort",
     "usageCount": "Usage Count",
     "deleteConfirm": "Delete {0}?"
+  },
+  "expertManage": {
+    "name": "Name",
+    "description": "Description",
+    "prompt": "Prompt",
+    "starters": "Starters",
+    "starterPlaceholder": "Suggested opening messages for a new chat",
+    "addStarter": "Add starter",
+    "mcp": "Default MCP",
+    "skill": "Default Skills",
+    "knowledge": "Default Knowledge Bases",
+    "sort": "Sort",
+    "usageCount": "Usage Count"
   }
 }
