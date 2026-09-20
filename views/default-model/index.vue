@@ -2,14 +2,15 @@
 import type {
   AIDefaultModelParams,
   AIDefaultModelResult,
-  AIDefaultModelScene,
+  AIModelKind,
   AIModelResult,
   AIProviderResult,
 } from '../../api';
 
-import { computed, onActivated, onMounted, reactive, ref } from 'vue';
+import { computed, h, onActivated, onMounted, reactive, ref, watch } from 'vue';
 
 import { Page, VbenButton } from '@vben/common-ui';
+import { CircleHelp } from '@vben/icons';
 import { $t } from '@vben/locales';
 
 import { message } from 'antdv-next';
@@ -22,34 +23,32 @@ import {
 } from '../../api';
 import { getProviderTypeLabel } from '../model-service/data';
 
-interface DefaultModelSceneForm {
+interface DefaultModelKindForm {
   fetchId: number;
   modelId?: string;
   models: AIModelResult[];
   modelsLoading: boolean;
   providerId?: number;
-  saving: boolean;
 }
 
-const sceneMetas: { scene: AIDefaultModelScene }[] = [
-  { scene: 'assistant' },
-  { scene: 'embedding' },
-];
+const KIND_LIST: AIModelKind[] = ['chat', 'embedding', 'image'];
 
-function createSceneForm(): DefaultModelSceneForm {
+function createKindForm(): DefaultModelKindForm {
   return {
     fetchId: 0,
     models: [],
     modelsLoading: false,
-    saving: false,
   };
 }
 
 const providers = ref<AIProviderResult[]>([]);
 const loading = ref(false);
-const sceneForms = {
-  assistant: reactive(createSceneForm()),
-  embedding: reactive(createSceneForm()),
+const saving = ref(false);
+const activeKind = ref<AIModelKind>('chat');
+const kindForms = {
+  chat: reactive(createKindForm()),
+  embedding: reactive(createKindForm()),
+  image: reactive(createKindForm()),
 };
 
 let hasInitialized = false;
@@ -65,19 +64,45 @@ const providerOptions = computed(() => {
   }));
 });
 
-function enabledModels(form: DefaultModelSceneForm) {
+const activeForm = computed(() => kindForms[activeKind.value]);
+
+const activeModelOptions = computed(() => {
+  return enabledModels(activeForm.value).map((item) => ({
+    label:
+      item.name && item.name !== item.model_id
+        ? `${item.name} · ${item.model_id}`
+        : item.model_id,
+    value: item.model_id,
+  }));
+});
+
+const tabItems = computed(() =>
+  KIND_LIST.map((kind) => ({
+    icon: () =>
+      h('span', {
+        class: `${kindTabIconClass(kind)} -mb-1 size-5`,
+      }),
+    key: kind,
+    label: $t(`ai-buddy.defaultModelManage.${kind}Tab`),
+  })),
+);
+
+function kindTabIconClass(kind: AIModelKind) {
+  if (kind === 'embedding') {
+    return 'icon-[carbon--data-base]';
+  }
+  if (kind === 'image') {
+    return 'icon-[carbon--image]';
+  }
+  return 'icon-[carbon--chat]';
+}
+
+function enabledModels(form: DefaultModelKindForm) {
   return form.models.filter((item) => Number(item.status) === 1);
 }
 
-function modelOptions(form: DefaultModelSceneForm) {
-  return enabledModels(form).map((item) => ({
-    label: item.model_id,
-    value: item.model_id,
-  }));
-}
-
 function applyDefaultModel(
-  form: DefaultModelSceneForm,
+  form: DefaultModelKindForm,
   model: AIDefaultModelResult | null,
 ) {
   form.providerId = model?.provider_id;
@@ -88,11 +113,11 @@ async function fetchProviders() {
   providers.value = await getAllAIProviderApi();
 }
 
-async function fetchDefaultModel(scene: AIDefaultModelScene) {
-  const form = sceneForms[scene];
+async function fetchDefaultModel(kind: AIModelKind) {
+  const form = kindForms[kind];
   let model: AIDefaultModelResult | null;
   try {
-    model = await getAIDefaultModelOptionalApi(scene);
+    model = await getAIDefaultModelOptionalApi(kind);
   } catch (error) {
     message.error((error as Error).message);
     throw error;
@@ -101,8 +126,8 @@ async function fetchDefaultModel(scene: AIDefaultModelScene) {
   applyDefaultModel(form, model);
 }
 
-async function fetchModelsByProvider(scene: AIDefaultModelScene) {
-  const form = sceneForms[scene];
+async function fetchModelsByProvider(kind: AIModelKind) {
+  const form = kindForms[kind];
   const fetchId = ++form.fetchId;
   const providerId = form.providerId;
 
@@ -114,7 +139,7 @@ async function fetchModelsByProvider(scene: AIDefaultModelScene) {
 
   form.modelsLoading = true;
   try {
-    const data = await getAllAIModelApi({ provider_id: providerId });
+    const data = await getAllAIModelApi({ kind, provider_id: providerId });
 
     if (fetchId !== form.fetchId) {
       return;
@@ -140,9 +165,9 @@ async function refreshPage() {
   try {
     await fetchProviders();
     await Promise.all(
-      sceneMetas.map(async ({ scene }) => {
-        await fetchDefaultModel(scene);
-        await fetchModelsByProvider(scene);
+      KIND_LIST.map(async (kind) => {
+        await fetchDefaultModel(kind);
+        await fetchModelsByProvider(kind);
       }),
     );
   } finally {
@@ -150,14 +175,30 @@ async function refreshPage() {
   }
 }
 
-async function onProviderChange(scene: AIDefaultModelScene) {
-  sceneForms[scene].modelId = undefined;
-  await fetchModelsByProvider(scene);
-}
+watch(
+  () => [activeKind.value, kindForms[activeKind.value].providerId] as const,
+  async ([kind, providerId], previous) => {
+    if (!hasInitialized || !previous) {
+      return;
+    }
+    const [previousKind, previousProviderId] = previous;
+    if (kind !== previousKind || providerId === previousProviderId) {
+      return;
+    }
+    kindForms[kind].modelId = undefined;
+    await fetchModelsByProvider(kind);
+  },
+);
 
-async function submitDefaultModel(scene: AIDefaultModelScene) {
-  const form = sceneForms[scene];
+async function submitDefaultModel() {
+  const kind = activeKind.value;
+  const form = kindForms[kind];
   if (!form.providerId || !form.modelId) {
+    message.warning($t('ai-buddy.defaultModelManage.selectRequired'));
+    return;
+  }
+
+  if (!enabledModels(form).some((item) => item.model_id === form.modelId)) {
     message.warning($t('ai-buddy.defaultModelManage.selectRequired'));
     return;
   }
@@ -168,17 +209,14 @@ async function submitDefaultModel(scene: AIDefaultModelScene) {
     status: 1,
   };
 
-  form.saving = true;
+  saving.value = true;
   try {
-    await updateAIDefaultModelApi(scene, payload);
-    message.success(
-      scene === 'assistant'
-        ? $t('ai-buddy.defaultModelManage.assistantUpdated')
-        : $t('ai-buddy.defaultModelManage.embeddingUpdated'),
-    );
-    await fetchDefaultModel(scene);
+    await updateAIDefaultModelApi(kind, payload);
+    message.success($t(`ai-buddy.defaultModelManage.${kind}Updated`));
+    await fetchDefaultModel(kind);
+    await fetchModelsByProvider(kind);
   } finally {
-    form.saving = false;
+    saving.value = false;
   }
 }
 
@@ -198,79 +236,85 @@ onActivated(async () => {
 
 <template>
   <Page auto-content-height>
-    <div class="flex h-full flex-col gap-4">
-      <a-card
-        v-for="meta in sceneMetas"
-        :key="meta.scene"
-        :loading="loading"
-        :title="
-          meta.scene === 'assistant'
-            ? $t('ai-buddy.defaultModelManage.assistantTitle')
-            : $t('ai-buddy.defaultModelManage.embeddingTitle')
-        "
+    <a-card
+      class="h-full overflow-y-auto rounded-[var(--radius)]"
+      variant="borderless"
+    >
+      <a-tabs
+        class="h-full"
+        v-model:active-key="activeKind"
+        animated
+        destroy-on-hidden
+        tab-placement="start"
+        :items="tabItems"
+        :tab-bar-style="{ width: '16%' }"
       >
-        <div class="flex flex-col gap-4">
-          <a-alert show-icon type="info">
-            <template #message>
-              {{
-                meta.scene === 'assistant'
-                  ? $t('ai-buddy.defaultModelManage.assistantHelp')
-                  : $t('ai-buddy.defaultModelManage.embeddingHelp')
-              }}
-            </template>
-          </a-alert>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <div>
-              <div class="mb-2 text-sm font-medium text-foreground">
-                {{ $t('ai-buddy.defaultModelManage.provider') }}
+        <template #contentRender>
+          <a-spin :spinning="loading">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center">
+                <div
+                  class="mr-2 flex w-[140px] shrink-0 items-center justify-start pl-2 text-sm leading-6"
+                >
+                  {{ $t('ai-buddy.defaultModelManage.provider') }}
+                  <a-tooltip
+                    :title="$t(`ai-buddy.defaultModelManage.${activeKind}Help`)"
+                  >
+                    <CircleHelp
+                      class="ml-1 size-3.5 cursor-help text-foreground/80 hover:text-foreground"
+                    />
+                  </a-tooltip>
+                </div>
+                <a-select
+                  v-model:value="activeForm.providerId"
+                  allow-clear
+                  class="w-full max-w-80"
+                  :disabled="saving"
+                  :options="providerOptions"
+                  :placeholder="
+                    $t('ai-buddy.defaultModelManage.providerPlaceholder')
+                  "
+                />
               </div>
-              <a-select
-                v-model:value="sceneForms[meta.scene].providerId"
-                class="w-full"
-                :disabled="sceneForms[meta.scene].saving"
-                :options="providerOptions"
-                :placeholder="
-                  $t('ai-buddy.defaultModelManage.providerPlaceholder')
-                "
-                @change="() => onProviderChange(meta.scene)"
-              />
-            </div>
-            <div>
-              <div class="mb-2 text-sm font-medium text-foreground">
-                {{ $t('ai-buddy.defaultModelManage.model') }}
-              </div>
-              <a-select
-                v-model:value="sceneForms[meta.scene].modelId"
-                class="w-full"
-                :disabled="
-                  sceneForms[meta.scene].saving ||
-                  !sceneForms[meta.scene].providerId
-                "
-                :loading="sceneForms[meta.scene].modelsLoading"
-                :options="modelOptions(sceneForms[meta.scene])"
-                :placeholder="
-                  $t('ai-buddy.defaultModelManage.modelPlaceholder')
-                "
-              />
-            </div>
-          </div>
 
-          <div class="flex justify-end gap-2">
-            <VbenButton
-              :loading="sceneForms[meta.scene].saving"
-              type="primary"
-              @click="submitDefaultModel(meta.scene)"
-            >
-              {{
-                meta.scene === 'assistant'
-                  ? $t('ai-buddy.defaultModelManage.saveAssistant')
-                  : $t('ai-buddy.defaultModelManage.saveEmbedding')
-              }}
-            </VbenButton>
-          </div>
-        </div>
-      </a-card>
-    </div>
+              <div class="flex items-center">
+                <div
+                  class="mr-2 flex w-[140px] shrink-0 items-center justify-start pl-2 text-sm leading-6"
+                >
+                  {{ $t('ai-buddy.defaultModelManage.model') }}
+                </div>
+                <a-select
+                  v-model:value="activeForm.modelId"
+                  allow-clear
+                  class="w-full max-w-80"
+                  :disabled="saving || !activeForm.providerId"
+                  :loading="activeForm.modelsLoading"
+                  :options="activeModelOptions"
+                  :placeholder="
+                    $t('ai-buddy.defaultModelManage.modelPlaceholder')
+                  "
+                />
+              </div>
+
+              <VbenButton
+                class="ml-1.5 mt-1 w-fit"
+                :loading="saving"
+                type="primary"
+                @click="submitDefaultModel"
+              >
+                {{ $t('common.save') }}
+              </VbenButton>
+            </div>
+          </a-spin>
+        </template>
+      </a-tabs>
+    </a-card>
   </Page>
 </template>
+
+<style lang="scss" scoped>
+:deep(.ant-card-body) {
+  height: 100%;
+  min-height: 100%;
+}
+</style>

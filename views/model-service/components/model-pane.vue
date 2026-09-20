@@ -36,7 +36,15 @@ import {
   syncAIProviderModelsApi,
   updateAIModelApi,
 } from '../../../api';
-import { createModelSchema, queryModelSchema, useModelColumns } from '../data';
+import {
+  createModelSchema,
+  getModelCapabilityColor,
+  getModelCapabilityIcon,
+  getModelCapabilityLabel,
+  getModelKindLabel,
+  queryModelSchema,
+  useModelColumns,
+} from '../data';
 import { createAIModelPayload } from '../model-params';
 
 const props = defineProps<{
@@ -300,13 +308,25 @@ async function submitBatchAddModels() {
   }
 
   const providerId = props.provider.id;
+  const remoteById = new Map(
+    providerModels.value.map((item) => [item.id, item]),
+  );
   const payload: AIBatchCreateModelsParams = {
-    items: selectedProviderModelIds.value.map((modelId) => ({
-      model_id: modelId,
-      provider_id: providerId,
-      remark: null,
-      status: 1,
-    })),
+    items: selectedProviderModelIds.value.map((modelId) => {
+      const remote = remoteById.get(modelId);
+      return {
+        capabilities: remote?.capabilities ?? [],
+        context_window: remote?.context_window ?? null,
+        kind: remote?.kind ?? 'chat',
+        max_output_tokens: remote?.max_output_tokens ?? null,
+        model_id: modelId,
+        name: remote?.display_name?.trim() || null,
+        provider_id: providerId,
+        remark: null,
+        sort: 0,
+        status: 1 as const,
+      };
+    }),
   };
 
   batchAddModalApi.lock();
@@ -441,6 +461,21 @@ const [Modal, modalApi] = useVbenModal({
             批量删除
           </VbenButton>
         </template>
+        <template #capabilities="{ row }">
+          <a-space v-if="row.capabilities?.length" :size="4" wrap>
+            <a-tag
+              v-for="item in row.capabilities"
+              :key="item"
+              :color="getModelCapabilityColor(item)"
+            >
+              <template #icon>
+                <span class="size-3.5" :class="getModelCapabilityIcon(item)" />
+              </template>
+              {{ getModelCapabilityLabel(item) }}
+            </a-tag>
+          </a-space>
+          <span v-else>-</span>
+        </template>
       </Grid>
       <BatchAddModal content-class="px-4 py-4 md:px-5 md:py-5">
         <div class="flex flex-col gap-4">
@@ -518,6 +553,7 @@ const [Modal, modalApi] = useVbenModal({
                       </span>
                     </a-checkbox>
                     <div class="flex shrink-0 items-center gap-2">
+                      <a-tag>{{ getModelKindLabel(item.kind) }}</a-tag>
                       <a-tag v-if="isExistingModel(item.id)">已添加</a-tag>
                       <a-tag v-else color="blue">可添加</a-tag>
                     </div>

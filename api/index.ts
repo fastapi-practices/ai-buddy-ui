@@ -13,7 +13,15 @@ export type AIActionResult = null | string;
 export type AIProviderType = 0 | 1 | 2 | 3 | 4 | 5;
 export type AIStatusType = 0 | 1;
 export type AIMcpType = 0 | 1 | 2;
-export type AIDefaultModelScene = 'assistant' | 'embedding';
+export type AIModelKind = 'chat' | 'embedding' | 'image';
+export type AIModelCapability =
+  | 'audio'
+  | 'document'
+  | 'image'
+  | 'text'
+  | 'thinking'
+  | 'tools'
+  | 'video';
 export type AIAssistantSortType = 'comprehensive' | 'hottest' | 'newest';
 
 interface AIProviderQueryParams {
@@ -46,6 +54,10 @@ export interface AIProviderModelResult {
   object?: null | string;
   created?: null | number;
   display_name?: null | string;
+  kind: AIModelKind;
+  capabilities?: AIModelCapability[];
+  context_window?: null | number;
+  max_output_tokens?: null | number;
 }
 
 export type AIDefaultModelOptionalResult = AIDefaultModelResult | null;
@@ -60,8 +72,7 @@ export interface AIProviderModelOptionResult {
 
 export interface AIModelOptionsResult {
   providers: AIProviderModelOptionResult[];
-  default_model?: AIDefaultModelResult | null;
-  default_embedding_model?: AIDefaultModelResult | null;
+  default_models: Partial<Record<AIModelKind, AIDefaultModelResult | null>>;
 }
 
 export interface AIProviderListResult {
@@ -74,17 +85,27 @@ export interface AIModelQueryParams {
   provider_id?: null | number;
   model_id?: null | string;
   status?: AIStatusType | null;
+  kind?: AIModelKind | null;
+  capability?: AIModelCapability | null;
   page?: number;
   size?: number;
 }
 
 export interface AIAllModelQueryParams {
   provider_id: number;
+  kind?: AIModelKind;
+  capability?: AIModelCapability;
 }
 
 export interface AIModelParams {
   provider_id: number;
   model_id: string;
+  name?: null | string;
+  kind: AIModelKind;
+  capabilities?: AIModelCapability[];
+  context_window?: null | number;
+  max_output_tokens?: null | number;
+  sort?: number;
   status: AIStatusType;
   remark?: null | string;
 }
@@ -95,6 +116,10 @@ export interface AIBatchCreateModelsParams {
 
 export interface AIModelResult extends AIModelParams {
   id: number;
+  name: string;
+  kind: AIModelKind;
+  capabilities: AIModelCapability[];
+  sort: number;
   created_time: string;
   updated_time?: null | string;
 }
@@ -107,7 +132,7 @@ export interface AIDefaultModelParams {
 
 export interface AIDefaultModelResult extends AIDefaultModelParams {
   id: number;
-  scene: AIDefaultModelScene;
+  kind: AIModelKind;
   provider_name: string;
   provider_type: AIProviderType;
   created_time: string;
@@ -384,16 +409,16 @@ export async function deleteAIModelApi(pks: number[]) {
   });
 }
 
-function defaultModelPath(scene: AIDefaultModelScene) {
-  return `/api/v1/default-models/${scene}`;
+function defaultModelPath(kind: AIModelKind) {
+  return `/api/v1/default-models/${kind}`;
 }
 
-export async function getAIDefaultModelApi(scene: AIDefaultModelScene) {
-  return requestClient.get<AIDefaultModelResult>(defaultModelPath(scene));
+export async function getAIDefaultModelApi(kind: AIModelKind) {
+  return requestClient.get<AIDefaultModelResult>(defaultModelPath(kind));
 }
 
-export async function getAIDefaultModelOptionalApi(scene: AIDefaultModelScene) {
-  const response = await fetch(resolveAIBuddyApiUrl(defaultModelPath(scene)), {
+export async function getAIDefaultModelOptionalApi(kind: AIModelKind) {
+  const response = await fetch(resolveAIBuddyApiUrl(defaultModelPath(kind)), {
     headers: getAIBuddyRequestHeaders(),
     method: 'GET',
   });
@@ -402,38 +427,10 @@ export async function getAIDefaultModelOptionalApi(scene: AIDefaultModelScene) {
 }
 
 export async function updateAIDefaultModelApi(
-  scene: AIDefaultModelScene,
+  kind: AIModelKind,
   data: AIDefaultModelParams,
 ) {
-  return requestClient.put<AIActionResult>(defaultModelPath(scene), data);
-}
-
-export async function getAIAssistantDefaultModelApi() {
-  return getAIDefaultModelApi('assistant');
-}
-
-export async function getAIAssistantDefaultModelOptionalApi() {
-  return getAIDefaultModelOptionalApi('assistant');
-}
-
-export async function updateAIAssistantDefaultModelApi(
-  data: AIDefaultModelParams,
-) {
-  return updateAIDefaultModelApi('assistant', data);
-}
-
-export async function getAIEmbeddingDefaultModelApi() {
-  return getAIDefaultModelApi('embedding');
-}
-
-export async function getAIEmbeddingDefaultModelOptionalApi() {
-  return getAIDefaultModelOptionalApi('embedding');
-}
-
-export async function updateAIEmbeddingDefaultModelApi(
-  data: AIDefaultModelParams,
-) {
-  return updateAIDefaultModelApi('embedding', data);
+  return requestClient.put<AIActionResult>(defaultModelPath(kind), data);
 }
 
 export async function getAllAIQuickPhraseApi() {
