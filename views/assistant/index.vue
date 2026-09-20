@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AIAssistantResult } from '../../api';
 import type { AIAssistantFormValues } from './assistant-params';
+import type { AssistantCategoryOption } from './data';
 
 import type { VbenFormProps } from '#/adapter/form';
 import type {
@@ -8,7 +9,7 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page, useVbenModal, VbenButton } from '@vben/common-ui';
 import { MaterialSymbolsAdd } from '@vben/icons';
@@ -22,6 +23,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   createAIAssistantApi,
   deleteAIAssistantApi,
+  getAIAssistantCategoriesApi,
   getAIAssistantListApi,
   updateAIAssistantApi,
 } from '../../api';
@@ -32,10 +34,16 @@ import {
   toAIAssistantFormValues,
 } from './assistant-params';
 import {
-  assistantSchema,
+  createAssistantSchema,
+  FALLBACK_ASSISTANT_CATEGORY_OPTIONS,
   queryAssistantSchema,
+  toAssistantCategoryOptions,
   useAssistantColumns,
 } from './data';
+
+const categoryOptions = ref<AssistantCategoryOption[]>(
+  FALLBACK_ASSISTANT_CATEGORY_OPTIONS,
+);
 
 const formOptions: VbenFormProps = {
   collapsed: true,
@@ -43,7 +51,7 @@ const formOptions: VbenFormProps = {
   submitButtonOptions: {
     content: $t('common.form.query'),
   },
-  schema: queryAssistantSchema,
+  schema: queryAssistantSchema(categoryOptions.value),
 };
 
 const gridOptions: VxeTableGridOptions<AIAssistantResult> = {
@@ -64,7 +72,7 @@ const gridOptions: VxeTableGridOptions<AIAssistantResult> = {
     },
     zoom: true,
   },
-  columns: useAssistantColumns(onActionClick),
+  columns: useAssistantColumns(onActionClick, () => categoryOptions.value),
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues) => {
@@ -109,7 +117,24 @@ function onActionClick({ code, row }: OnActionClickParams<AIAssistantResult>) {
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
   showDefaultActions: false,
-  schema: assistantSchema,
+  schema: createAssistantSchema(categoryOptions.value),
+});
+
+async function loadAssistantCategories() {
+  try {
+    categoryOptions.value = toAssistantCategoryOptions(
+      await getAIAssistantCategoriesApi(),
+    );
+  } catch {
+    categoryOptions.value = FALLBACK_ASSISTANT_CATEGORY_OPTIONS;
+  }
+  gridApi.formApi.setState({
+    schema: queryAssistantSchema(categoryOptions.value),
+  });
+}
+
+onMounted(() => {
+  void loadAssistantCategories();
 });
 
 const formData = ref<AIAssistantResult>();
@@ -167,6 +192,9 @@ const [Modal, modalApi] = useVbenModal({
       const data = modalApi.getData<AIAssistantResult>();
       const values = toAIAssistantFormValues(data);
       formApi.resetForm();
+      formApi.setState({
+        schema: createAssistantSchema(categoryOptions.value),
+      });
       starters.value = values.starters ?? [];
       if (data) {
         formData.value = data;

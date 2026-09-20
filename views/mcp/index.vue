@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AIMcpParams, AIMcpResult } from '../../api';
+import type { AIMcpResult } from '../../api';
 import type { AIMcpFormValues } from './mcp-params';
 
 import type { VbenFormProps } from '#/adapter/form';
@@ -24,6 +24,7 @@ import {
   createAIMcpApi,
   deleteAIMcpApi,
   getAIMcpListApi,
+  importAIMcpApi,
   updateAIMcpApi,
 } from '../../api';
 import {
@@ -32,7 +33,6 @@ import {
   queryMcpSchema,
   useMcpColumns,
 } from './data';
-import { parseStandardMcpJson } from './mcp-import';
 import {
   createAIMcpPayload,
   getDefaultMcpType,
@@ -193,22 +193,21 @@ const [ImportModal, importModalApi] = useVbenModal({
     const { jsonText } = await importFormApi.getValues<{
       jsonText: string;
     }>();
-    let payloads: AIMcpParams[];
-    try {
-      payloads = parseStandardMcpJson(jsonText, {
-        allowStdio: isSuperuser.value,
-      });
-    } catch (error) {
-      message.error((error as Error).message);
-      return;
-    }
 
     importModalApi.lock();
     try {
-      for (const payload of payloads) {
-        await createAIMcpApi(payload);
+      const result = await importAIMcpApi({ config: jsonText });
+      if (result.created > 0) {
+        message.success($t('ai-buddy.mcpManage.imported', [result.created]));
       }
-      message.success($t('ui.actionMessage.operationSuccess'));
+      if (result.skipped.length > 0) {
+        message.warning(
+          $t('ai-buddy.mcpManage.skipped', [result.skipped.join(', ')]),
+        );
+      }
+      if (result.created === 0 && result.skipped.length === 0) {
+        message.warning($t('ai-buddy.mcpManage.empty'));
+      }
       await importModalApi.close();
       onRefresh();
     } finally {

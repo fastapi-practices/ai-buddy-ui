@@ -49,10 +49,14 @@ interface ResponseSchema<T> {
   msg?: string;
 }
 
+function isMissingDefaultModel(status: number) {
+  return status === 400 || status === 404;
+}
+
 export async function readOptionalDefaultModelResponse<T>(
   response: Response,
 ): Promise<null | T> {
-  if (response.status === 404) {
+  if (isMissingDefaultModel(response.status)) {
     return null;
   }
 
@@ -61,7 +65,7 @@ export async function readOptionalDefaultModelResponse<T>(
   }
 
   const payload = (await response.json()) as ResponseSchema<T>;
-  if (payload.code === 404) {
+  if (isMissingDefaultModel(payload.code)) {
     return null;
   }
 

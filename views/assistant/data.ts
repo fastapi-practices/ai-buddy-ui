@@ -1,4 +1,4 @@
-import type { AIAssistantResult } from '../../api';
+import type { AIAssistantCategoryResult, AIAssistantResult } from '../../api';
 
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
@@ -7,7 +7,12 @@ import { $t } from '@vben/locales';
 
 import { ownerColumn } from '../owner';
 
-const assistantCategoryOptions = [
+export interface AssistantCategoryOption {
+  label: string;
+  value: string;
+}
+
+export const FALLBACK_ASSISTANT_CATEGORY_OPTIONS: AssistantCategoryOption[] = [
   { label: '效率办公', value: 'efficiency' },
   { label: '写作创作', value: 'writing' },
   { label: '翻译语言', value: 'translation' },
@@ -20,25 +25,46 @@ const assistantCategoryOptions = [
   { label: '金融财务', value: 'finance' },
 ];
 
-export const queryAssistantSchema: VbenFormSchema[] = [
-  {
-    component: 'Input',
-    fieldName: 'name',
-    label: $t('ai-buddy.assistantManage.name'),
-  },
-  {
-    component: 'Select',
-    componentProps: {
-      class: 'w-full',
-      options: assistantCategoryOptions,
+export function toAssistantCategoryOptions(
+  categories: AIAssistantCategoryResult[],
+): AssistantCategoryOption[] {
+  return [...categories]
+    .toSorted((left, right) => left.sort - right.sort)
+    .map((item) => ({
+      label: item.name,
+      value: item.code,
+    }));
+}
+
+function categorySelectProps(options: AssistantCategoryOption[]) {
+  return {
+    class: 'w-full',
+    options,
+  };
+}
+
+export function queryAssistantSchema(
+  options: AssistantCategoryOption[] = FALLBACK_ASSISTANT_CATEGORY_OPTIONS,
+): VbenFormSchema[] {
+  return [
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: $t('ai-buddy.assistantManage.name'),
     },
-    fieldName: 'category',
-    label: $t('ai-buddy.assistantManage.category'),
-  },
-];
+    {
+      component: 'Select',
+      componentProps: categorySelectProps(options),
+      fieldName: 'category',
+      label: $t('ai-buddy.assistantManage.category'),
+    },
+  ];
+}
 
 export function useAssistantColumns(
   onActionClick?: OnActionClickFn<AIAssistantResult>,
+  getCategoryOptions: () => AssistantCategoryOption[] = () =>
+    FALLBACK_ASSISTANT_CATEGORY_OPTIONS,
 ): VxeGridProps['columns'] {
   return [
     {
@@ -60,8 +86,8 @@ export function useAssistantColumns(
       width: 140,
       align: 'left',
       formatter: ({ cellValue }) =>
-        assistantCategoryOptions.find((item) => item.value === cellValue)
-          ?.label ?? cellValue,
+        getCategoryOptions().find((item) => item.value === cellValue)?.label ??
+        cellValue,
     },
     {
       field: 'description',
@@ -103,43 +129,44 @@ export function useAssistantColumns(
   ];
 }
 
-export const assistantSchema: VbenFormSchema[] = [
-  {
-    component: 'Input',
-    fieldName: 'name',
-    label: $t('ai-buddy.assistantManage.name'),
-    rules: 'required',
-  },
-  {
-    component: 'Select',
-    componentProps: {
-      class: 'w-full',
-      options: assistantCategoryOptions,
+export function createAssistantSchema(
+  options: AssistantCategoryOption[] = FALLBACK_ASSISTANT_CATEGORY_OPTIONS,
+): VbenFormSchema[] {
+  return [
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: $t('ai-buddy.assistantManage.name'),
+      rules: 'required',
     },
-    fieldName: 'category',
-    label: $t('ai-buddy.assistantManage.category'),
-  },
-  {
-    component: 'Textarea',
-    fieldName: 'description',
-    label: $t('ai-buddy.assistantManage.description'),
-  },
-  {
-    component: 'Textarea',
-    fieldName: 'prompt',
-    label: $t('ai-buddy.assistantManage.prompt'),
-    rules: 'required',
-  },
-  {
-    component: 'InputNumber',
-    componentProps: {
-      class: 'w-full',
-      min: 0,
-      precision: 0,
-      step: 1,
+    {
+      component: 'Select',
+      componentProps: categorySelectProps(options),
+      fieldName: 'category',
+      label: $t('ai-buddy.assistantManage.category'),
     },
-    defaultValue: 0,
-    fieldName: 'sort',
-    label: $t('ai-buddy.assistantManage.sort'),
-  },
-];
+    {
+      component: 'Textarea',
+      fieldName: 'description',
+      label: $t('ai-buddy.assistantManage.description'),
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'prompt',
+      label: $t('ai-buddy.assistantManage.prompt'),
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        class: 'w-full',
+        min: 0,
+        precision: 0,
+        step: 1,
+      },
+      defaultValue: 0,
+      fieldName: 'sort',
+      label: $t('ai-buddy.assistantManage.sort'),
+    },
+  ];
+}

@@ -24,7 +24,13 @@
     "model": "模型",
     "providerPlaceholder": "请选择供应商",
     "modelPlaceholder": "请选择模型",
-    "selectRequired": "请选择供应商和模型"
+    "selectRequired": "请选择供应商和模型",
+    "unavailable": "当前默认模型不可用，请重新选择并保存"
+  },
+  "mcpManage": {
+    "imported": "已导入 {0} 个 MCP",
+    "skipped": "已跳过重名：{0}",
+    "empty": "没有可导入的 MCP"
   },
   "model": "供应商与模型",
   "quick_phrase": "快捷短语",
