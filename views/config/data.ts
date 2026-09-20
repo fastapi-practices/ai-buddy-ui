@@ -100,7 +100,8 @@ export const ragEmbedSchema: VbenFormSchema[] = [
       ],
     },
     defaultValue: 'remote',
-    description: '远程使用默认向量模型，知识库可单独覆盖；本地需先下载模型后才能保存',
+    description:
+      '远程使用默认向量模型，知识库可单独覆盖；本地需先下载模型后才能保存',
     fieldName: AI_EMBEDDING_BACKEND,
     label: '向量化方式',
   },
@@ -150,7 +151,8 @@ export const ragExtractSchema: VbenFormSchema[] = [
       show: (values) => values[AI_DOCUMENT_EXTRACT_BACKEND] === 'unstructured',
       triggerFields: [AI_DOCUMENT_EXTRACT_BACKEND],
     },
-    description: '空则使用官方托管地址，密钥获取 https://platform.unstructured.io',
+    description:
+      '空则使用官方托管地址，密钥获取 https://platform.unstructured.io',
     fieldName: AI_UNSTRUCTURED_API_URL,
     label: 'Unstructured URL',
   },
@@ -308,7 +310,8 @@ export const ragMistralSchema: VbenFormSchema[] = [
       show: isMistralBackend,
       triggerFields: [AI_DOCUMENT_EXTRACT_BACKEND, AI_OCR_BACKEND],
     },
-    description: '空则使用官方地址，密钥获取 https://console.mistral.ai/api-keys',
+    description:
+      '空则使用官方地址，密钥获取 https://console.mistral.ai/api-keys',
     fieldName: AI_MISTRAL_API_URL,
     label: 'Mistral URL',
   },

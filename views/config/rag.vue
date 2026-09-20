@@ -246,7 +246,8 @@ async function pollPaddleocrDownload(modelId: string) {
         : paddleocrModels.value.map((item) =>
             item.id === modelId ? { ...item, downloaded: true } : item,
           );
-      paddleocrCacheDir.value = catalog?.paddleocr_cache_dir ?? paddleocrCacheDir.value;
+      paddleocrCacheDir.value =
+        catalog?.paddleocr_cache_dir ?? paddleocrCacheDir.value;
       message.success('PaddleOCR 模型已下载');
       return;
     }

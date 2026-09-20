@@ -62,9 +62,7 @@ function downloadModel(item: AIOnnxOption) {
   (props.download ?? ctx?.download)?.(item);
 }
 
-const selectedId = computed(
-  () => props.value || props.modelValue || '',
-);
+const selectedId = computed(() => props.value || props.modelValue || '');
 
 function selectModel(modelId: string) {
   if (props.disabled) {

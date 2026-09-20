@@ -12,7 +12,8 @@ export const AI_COMPACTION_MAX_MESSAGES = 'AI_COMPACTION_MAX_MESSAGES';
 export const AI_DOCUMENT_EXTRACT_BACKEND = 'AI_DOCUMENT_EXTRACT_BACKEND';
 export const AI_UNSTRUCTURED_API_URL = 'AI_UNSTRUCTURED_API_URL';
 export const AI_UNSTRUCTURED_API_KEY = 'AI_UNSTRUCTURED_API_KEY';
-export const AI_MARKITDOWN_DOCINTEL_ENDPOINT = 'AI_MARKITDOWN_DOCINTEL_ENDPOINT';
+export const AI_MARKITDOWN_DOCINTEL_ENDPOINT =
+  'AI_MARKITDOWN_DOCINTEL_ENDPOINT';
 export const AI_MARKITDOWN_DOCINTEL_API_KEY = 'AI_MARKITDOWN_DOCINTEL_API_KEY';
 export const AI_MINERU_API_KEY = 'AI_MINERU_API_KEY';
 export const AI_OPEN_MINERU_API_URL = 'AI_OPEN_MINERU_API_URL';
@@ -118,9 +119,7 @@ export function pickRagConfigs<T extends { key: string }>(rows: T[]): T[] {
   return pickConfigsByKeys(rows, AI_RAG_CONFIG_KEYS);
 }
 
-export function pickRagStoreConfigs<T extends { key: string }>(
-  rows: T[],
-): T[] {
+export function pickRagStoreConfigs<T extends { key: string }>(rows: T[]): T[] {
   return pickConfigsByKeys(rows, AI_RAG_STORE_CONFIG_KEYS);
 }
 
