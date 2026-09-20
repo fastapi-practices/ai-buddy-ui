@@ -187,6 +187,15 @@ export interface AIMcpResult extends AIMcpParams {
   updated_time?: null | string;
 }
 
+export interface AIMcpImportParams {
+  config: string;
+}
+
+export interface AIMcpImportResult {
+  created: number;
+  skipped: string[];
+}
+
 interface AIKnowledgeBaseQueryParams {
   name?: null | string;
   page?: number;
@@ -543,6 +552,10 @@ export async function createAIMcpApi(data: AIMcpParams) {
   return requestClient.post<AIActionResult>('/api/v1/mcps', data);
 }
 
+export async function importAIMcpApi(data: AIMcpImportParams) {
+  return requestClient.post<AIMcpImportResult>('/api/v1/mcps/import', data);
+}
+
 export async function updateAIMcpApi(pk: number, data: AIMcpParams) {
   return requestClient.put<AIActionResult>(`/api/v1/mcps/${pk}`, data);
 }
@@ -583,9 +596,13 @@ export async function deleteAIKnowledgeBaseApi(pk: number) {
   return requestClient.delete<AIActionResult>(`/api/v1/knowledges/${pk}`);
 }
 
-export async function getAllAIKnowledgeDocumentApi(pk: number) {
+export async function getAllAIKnowledgeDocumentApi(
+  pk: number,
+  includeContent = false,
+) {
   return requestClient.get<AIKnowledgeDocumentResult[]>(
     `/api/v1/knowledges/${pk}/documents/all`,
+    { params: { include_content: includeContent } },
   );
 }
 

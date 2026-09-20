@@ -113,17 +113,29 @@ async function fetchProviders() {
   providers.value = await getAllAIProviderApi();
 }
 
+function isDefaultModelAvailable(model: AIDefaultModelResult | null) {
+  if (!model) {
+    return true;
+  }
+  if (Number(model.status) !== 1) {
+    return false;
+  }
+  return enabledProviders.value.some((item) => item.id === model.provider_id);
+}
+
 async function fetchDefaultModel(kind: AIModelKind) {
   const form = kindForms[kind];
-  let model: AIDefaultModelResult | null;
   try {
-    model = await getAIDefaultModelOptionalApi(kind);
+    const model = await getAIDefaultModelOptionalApi(kind);
+    applyDefaultModel(form, model);
+    return model;
   } catch (error) {
-    message.error((error as Error).message);
-    throw error;
+    applyDefaultModel(form, null);
+    message.warning(
+      (error as Error).message || $t('ai-buddy.defaultModelManage.unavailable'),
+    );
+    return null;
   }
-
-  applyDefaultModel(form, model);
 }
 
 async function fetchModelsByProvider(kind: AIModelKind) {
@@ -164,12 +176,23 @@ async function refreshPage() {
   loading.value = true;
   try {
     await fetchProviders();
-    await Promise.all(
+    const models = await Promise.all(
       KIND_LIST.map(async (kind) => {
-        await fetchDefaultModel(kind);
+        const model = await fetchDefaultModel(kind);
         await fetchModelsByProvider(kind);
+        return { kind, model };
       }),
     );
+    const active = models.find((item) => item.kind === activeKind.value);
+    if (
+      active &&
+      (!isDefaultModelAvailable(active.model) ||
+        (active.model && !kindForms[active.kind].modelId))
+    ) {
+      message.warning($t('ai-buddy.defaultModelManage.unavailable'));
+    }
+  } catch (error) {
+    message.error((error as Error).message);
   } finally {
     loading.value = false;
   }

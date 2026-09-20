@@ -24,7 +24,13 @@
     "model": "Model",
     "providerPlaceholder": "Select a provider",
     "modelPlaceholder": "Select a model",
-    "selectRequired": "Select a provider and model"
+    "selectRequired": "Select a provider and model",
+    "unavailable": "The current default model is unavailable. Select another and save"
+  },
+  "mcpManage": {
+    "imported": "Imported {0} MCP servers",
+    "skipped": "Skipped duplicates: {0}",
+    "empty": "No MCP servers to import"
   },
   "model": "Providers & Models",
   "quick_phrase": "Quick Phrase",
