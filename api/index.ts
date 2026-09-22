@@ -45,6 +45,7 @@ export type AIProviderUpdateParams = AIProviderParams;
 
 export interface AIProviderResult extends AIProviderParams {
   id: number;
+  user_id: number;
   created_time: string;
   updated_time?: null | string;
 }
@@ -64,6 +65,7 @@ export type AIDefaultModelOptionalResult = AIDefaultModelResult | null;
 
 export interface AIProviderModelOptionResult {
   id: number;
+  user_id: number;
   name: string;
   type: AIProviderType;
   status: AIStatusType;
@@ -435,12 +437,6 @@ export async function deleteAIProviderApi(pks: number[]) {
 export async function getAIProviderModelsApi(pk: number) {
   return requestClient.get<AIProviderModelResult[]>(
     `/api/v1/providers/${pk}/models`,
-  );
-}
-
-export async function syncAIProviderModelsApi(pk: number) {
-  return requestClient.post<AIActionResult>(
-    `/api/v1/providers/${pk}/models/sync`,
   );
 }
 

@@ -17,7 +17,12 @@ import type { PaginationResult } from '#/types';
 
 import { computed, ref } from 'vue';
 
-import { confirm, useVbenModal, VbenButton } from '@vben/common-ui';
+import {
+  confirm,
+  useVbenDrawer,
+  useVbenModal,
+  VbenButton,
+} from '@vben/common-ui';
 import { MaterialSymbolsAdd, MaterialSymbolsDelete } from '@vben/icons';
 import { $t } from '@vben/locales';
 
@@ -33,7 +38,6 @@ import {
   getAIModelListApi,
   getAIProviderModelsApi,
   getAllAIModelApi,
-  syncAIProviderModelsApi,
   updateAIModelApi,
 } from '../../../api';
 import {
@@ -41,11 +45,11 @@ import {
   getModelCapabilityColor,
   getModelCapabilityIcon,
   getModelCapabilityLabel,
-  getModelKindLabel,
   queryModelSchema,
   useModelColumns,
 } from '../data';
 import { createAIModelPayload } from '../model-params';
+import { AI_PROVIDER_TYPE } from '../provider-params';
 
 const props = defineProps<{
   provider?: AIProviderResult;
@@ -132,9 +136,7 @@ const existingModelIds = ref<string[]>([]);
 const selectedProviderModelIds = ref<string[]>([]);
 
 const existingModelIdSet = computed(() => new Set(existingModelIds.value));
-const canSyncProviderModels = computed(() => {
-  return Boolean(props.provider);
-});
+const canManageModels = computed(() => Boolean(props.provider));
 const filteredProviderModels = computed(() => {
   const keyword = batchKeyword.value.trim().toLowerCase();
 
@@ -248,36 +250,13 @@ function handleSelectAllFiltered(checked: boolean) {
   selectedProviderModelIds.value = [...nextSelectedIds];
 }
 
-async function syncModels() {
-  if (!canSyncProviderModels.value || !props.provider) {
-    return;
-  }
-
-  await syncAIProviderModelsApi(props.provider.id);
-  message.success($t('ui.actionMessage.operationSuccess'));
-  onRefresh();
-}
-
-function confirmSyncModels() {
-  if (!canSyncProviderModels.value || !props.provider) {
-    return;
-  }
-
-  confirm({
-    content: '同步将覆盖当前模型列表，是否继续？',
-    icon: 'warning',
-  }).then(async () => {
-    await syncModels();
-  });
-}
-
-async function openBatchAddModal() {
-  if (!props.provider || !canSyncProviderModels.value) {
+async function openSyncDrawer() {
+  if (!props.provider || !canManageModels.value) {
     return;
   }
 
   resetBatchAddState();
-  batchAddModalApi.open();
+  syncDrawerApi.open();
   batchLoading.value = true;
 
   try {
@@ -291,10 +270,6 @@ async function openBatchAddModal() {
   } finally {
     batchLoading.value = false;
   }
-}
-
-async function closeBatchAddModal() {
-  await batchAddModalApi.close();
 }
 
 async function submitBatchAddModels() {
@@ -329,23 +304,25 @@ async function submitBatchAddModels() {
     }),
   };
 
-  batchAddModalApi.lock();
+  syncDrawerApi.lock();
 
   try {
     await batchCreateAIModelApi(payload);
     message.success($t('ui.actionMessage.operationSuccess'));
-    await closeBatchAddModal();
+    await syncDrawerApi.close();
     onRefresh();
   } finally {
-    batchAddModalApi.unlock();
+    syncDrawerApi.unlock();
   }
 }
 
-const [BatchAddModal, batchAddModalApi] = useVbenModal({
-  class: 'w-[min(720px,92vw)]',
-  closeOnClickModal: false,
+const [SyncDrawer, syncDrawerApi] = useVbenDrawer({
+  class: 'ai-buddy-model-sync-drawer',
   confirmText: '添加',
+  contentClass: 'h-full overflow-hidden p-0',
   destroyOnClose: true,
+  footerClass: 'px-5 py-3',
+  title: '同步模型',
   onConfirm() {
     void submitBatchAddModels();
   },
@@ -354,13 +331,12 @@ const [BatchAddModal, batchAddModalApi] = useVbenModal({
       resetBatchAddState();
     }
   },
-  title: '批量添加模型',
 });
 
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
   showDefaultActions: false,
-  schema: createModelSchema(),
+  schema: createModelSchema({ providerType: props.provider?.type }),
 });
 
 const formData = ref<AIModelResult>();
@@ -383,8 +359,18 @@ const [Modal, modalApi] = useVbenModal({
       return;
     }
 
-    modalApi.lock();
     const values = await formApi.getValues<AIModelFormValues>();
+    if (
+      props.provider.type === AI_PROVIDER_TYPE.openrouter &&
+      !values.model_id.includes('/')
+    ) {
+      message.warning(
+        'OpenRouter 模型 ID 必须包含供应商前缀，例如 openai/gpt-4o-mini',
+      );
+      return;
+    }
+
+    modalApi.lock();
     const payload = createAIModelPayload(props.provider.id, values);
 
     try {
@@ -436,17 +422,9 @@ const [Modal, modalApi] = useVbenModal({
           </VbenButton>
           <VbenButton
             class="ml-2"
-            v-if="canSyncProviderModels"
+            v-if="canManageModels"
             variant="outline"
-            @click="openBatchAddModal"
-          >
-            批量添加模型
-          </VbenButton>
-          <VbenButton
-            class="ml-2"
-            v-if="canSyncProviderModels"
-            variant="outline"
-            @click="confirmSyncModels"
+            @click="openSyncDrawer"
           >
             同步模型
           </VbenButton>
@@ -477,8 +455,8 @@ const [Modal, modalApi] = useVbenModal({
           <span v-else>-</span>
         </template>
       </Grid>
-      <BatchAddModal content-class="px-4 py-4 md:px-5 md:py-5">
-        <div class="flex flex-col gap-4">
+      <SyncDrawer>
+        <div class="box-border flex h-full min-h-0 flex-col gap-4 p-5">
           <div class="flex flex-col gap-3 md:flex-row md:items-center">
             <a-input
               v-model:value="batchKeyword"
@@ -500,25 +478,25 @@ const [Modal, modalApi] = useVbenModal({
           </div>
 
           <div
-            class="min-h-[320px] rounded-xl border border-border bg-muted/20"
+            class="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-muted/20"
           >
             <div
               v-if="batchLoading"
-              class="flex min-h-[320px] items-center justify-center"
+              class="flex h-full min-h-[320px] items-center justify-center"
             >
               <a-spin />
             </div>
 
             <div
               v-else-if="providerModels.length === 0"
-              class="flex min-h-[320px] items-center justify-center"
+              class="flex h-full min-h-[320px] items-center justify-center"
             >
               <a-empty description="供应商暂无可用模型" />
             </div>
 
             <div
               v-else-if="filteredProviderModels.length === 0"
-              class="flex min-h-[320px] items-center justify-center"
+              class="flex h-full min-h-[320px] items-center justify-center"
             >
               <a-empty description="没有匹配的模型" />
             </div>
@@ -528,7 +506,7 @@ const [Modal, modalApi] = useVbenModal({
               v-model:value="selectedProviderModelIds"
               class="block h-full w-full"
             >
-              <div class="h-full w-full max-h-[420px] overflow-y-auto">
+              <div class="h-full w-full overflow-y-auto">
                 <div class="w-full space-y-2 p-3">
                   <div
                     v-for="item in filteredProviderModels"
@@ -552,21 +530,43 @@ const [Modal, modalApi] = useVbenModal({
                         }}
                       </span>
                     </a-checkbox>
-                    <div class="flex shrink-0 items-center gap-2">
-                      <a-tag>{{ getModelKindLabel(item.kind) }}</a-tag>
-                      <a-tag v-if="isExistingModel(item.id)">已添加</a-tag>
-                      <a-tag v-else color="blue">可添加</a-tag>
-                    </div>
+                    <a-space
+                      v-if="item.capabilities?.length"
+                      class="shrink-0"
+                      :size="4"
+                      wrap
+                    >
+                      <a-tag
+                        v-for="capability in item.capabilities"
+                        :key="capability"
+                        :color="getModelCapabilityColor(capability)"
+                      >
+                        <template #icon>
+                          <span
+                            class="size-3.5"
+                            :class="getModelCapabilityIcon(capability)"
+                          />
+                        </template>
+                        {{ getModelCapabilityLabel(capability) }}
+                      </a-tag>
+                    </a-space>
                   </div>
                 </div>
               </div>
             </a-checkbox-group>
           </div>
         </div>
-      </BatchAddModal>
+      </SyncDrawer>
       <Modal :title="modalTitle">
         <Form />
       </Modal>
     </template>
   </div>
 </template>
+
+<style lang="scss">
+.ai-buddy-model-sync-drawer {
+  width: min(720px, calc(100vw - 48px)) !important;
+  max-width: none !important;
+}
+</style>
