@@ -42,43 +42,43 @@ export const MODEL_CAPABILITY_OPTIONS: {
 }[] = [
   {
     color: 'orange',
-    icon: 'icon-[carbon--tools]',
+    icon: 'carbon:tools',
     label: '工具',
     value: 'tools',
   },
   {
     color: 'geekblue',
-    icon: 'icon-[carbon--idea]',
+    icon: 'carbon:idea',
     label: '思考',
     value: 'thinking',
   },
   {
     color: 'default',
-    icon: 'icon-[carbon--string-text]',
+    icon: 'carbon:string-text',
     label: '文本',
     value: 'text',
   },
   {
     color: 'green',
-    icon: 'icon-[carbon--view]',
+    icon: 'carbon:view',
     label: '图片',
     value: 'image',
   },
   {
     color: 'purple',
-    icon: 'icon-[carbon--video]',
+    icon: 'carbon:video',
     label: '视频',
     value: 'video',
   },
   {
     color: 'magenta',
-    icon: 'icon-[carbon--volume-up]',
+    icon: 'carbon:volume-up',
     label: '音频',
     value: 'audio',
   },
   {
     color: 'gold',
-    icon: 'icon-[carbon--document]',
+    icon: 'carbon:document',
     label: '文档',
     value: 'document',
   },
@@ -105,7 +105,7 @@ export function getModelCapabilityIcon(
 ) {
   return (
     MODEL_CAPABILITY_OPTIONS.find((item) => item.value === capability)?.icon ??
-    'icon-[carbon--help]'
+    'carbon:help'
   );
 }
 
@@ -186,11 +186,6 @@ export function useModelColumns(
       field: 'remark',
       title: $t('common.table.mark'),
       align: 'left',
-    },
-    {
-      field: 'created_time',
-      title: $t('common.table.created_time'),
-      width: 168,
     },
     {
       field: 'operation',
