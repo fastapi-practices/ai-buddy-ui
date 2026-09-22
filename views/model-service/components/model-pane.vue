@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { CSSProperties } from 'vue';
+
 import type {
   AIBatchCreateModelsParams,
   AIModelResult,
@@ -23,7 +25,11 @@ import {
   useVbenModal,
   VbenButton,
 } from '@vben/common-ui';
-import { MaterialSymbolsAdd, MaterialSymbolsDelete } from '@vben/icons';
+import {
+  IconifyIcon,
+  MaterialSymbolsAdd,
+  MaterialSymbolsDelete,
+} from '@vben/icons';
 import { $t } from '@vben/locales';
 
 import { message } from 'antdv-next';
@@ -54,6 +60,29 @@ import { AI_PROVIDER_TYPE } from '../provider-params';
 const props = defineProps<{
   provider?: AIProviderResult;
 }>();
+
+const capabilityTagStyles: {
+  icon: CSSProperties;
+  root: CSSProperties;
+} = {
+  icon: {
+    display: 'inline-flex',
+    height: '14px',
+    lineHeight: 1,
+    margin: 0,
+    width: '14px',
+  },
+  root: {
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    display: 'inline-flex',
+    height: '24px',
+    justifyContent: 'center',
+    padding: 0,
+    verticalAlign: 'middle',
+    width: '24px',
+  },
+};
 
 const EMPTY_PAGINATION: PaginationResult<AIModelResult> = {
   items: [],
@@ -441,16 +470,20 @@ const [Modal, modalApi] = useVbenModal({
         </template>
         <template #capabilities="{ row }">
           <a-space v-if="row.capabilities?.length" :size="4" wrap>
-            <a-tag
+            <a-tooltip
               v-for="item in row.capabilities"
               :key="item"
-              :color="getModelCapabilityColor(item)"
+              :title="getModelCapabilityLabel(item)"
             >
-              <template #icon>
-                <span class="size-3.5" :class="getModelCapabilityIcon(item)" />
-              </template>
-              {{ getModelCapabilityLabel(item) }}
-            </a-tag>
+              <a-tag
+                :color="getModelCapabilityColor(item)"
+                :styles="capabilityTagStyles"
+              >
+                <template #icon>
+                  <IconifyIcon :icon="getModelCapabilityIcon(item)" />
+                </template>
+              </a-tag>
+            </a-tooltip>
           </a-space>
           <span v-else>-</span>
         </template>
@@ -536,19 +569,22 @@ const [Modal, modalApi] = useVbenModal({
                       :size="4"
                       wrap
                     >
-                      <a-tag
+                      <a-tooltip
                         v-for="capability in item.capabilities"
                         :key="capability"
-                        :color="getModelCapabilityColor(capability)"
+                        :title="getModelCapabilityLabel(capability)"
                       >
-                        <template #icon>
-                          <span
-                            class="size-3.5"
-                            :class="getModelCapabilityIcon(capability)"
-                          />
-                        </template>
-                        {{ getModelCapabilityLabel(capability) }}
-                      </a-tag>
+                        <a-tag
+                          :color="getModelCapabilityColor(capability)"
+                          :styles="capabilityTagStyles"
+                        >
+                          <template #icon>
+                            <IconifyIcon
+                              :icon="getModelCapabilityIcon(capability)"
+                            />
+                          </template>
+                        </a-tag>
+                      </a-tooltip>
                     </a-space>
                   </div>
                 </div>
