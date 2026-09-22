@@ -3,6 +3,7 @@ import type {
   AIModelKind,
   AIModelResult,
   AIProviderResult,
+  AIProviderType,
 } from '../../api';
 
 import type { VbenFormSchema } from '#/adapter/form';
@@ -11,6 +12,12 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 import { $t } from '@vben/locales';
 
 import { DictEnum, getDictOptions } from '#/utils/dict';
+
+import {
+  AI_PROVIDER_TYPE,
+  getProviderDefaultHost,
+  isProviderDefaultHost,
+} from './provider-params';
 
 export const PROVIDER_TYPE_OPTIONS = [
   { label: 'OpenAI', value: 0 },
@@ -202,7 +209,11 @@ export function useModelColumns(
   ];
 }
 
-export function createProviderSchema(): VbenFormSchema[] {
+export function createProviderSchema(options?: {
+  isEdit?: boolean;
+}): VbenFormSchema[] {
+  const isEdit = Boolean(options?.isEdit);
+
   return [
     {
       component: 'Input',
@@ -216,22 +227,42 @@ export function createProviderSchema(): VbenFormSchema[] {
         class: 'w-full',
         options: PROVIDER_TYPE_OPTIONS,
       },
-      defaultValue: 0,
+      defaultValue: AI_PROVIDER_TYPE.openai,
       fieldName: 'type',
       label: '供应商类型',
       rules: 'required',
     },
     {
       component: 'Input',
+      defaultValue: getProviderDefaultHost(AI_PROVIDER_TYPE.openai),
+      dependencies: {
+        componentProps(values) {
+          return {
+            placeholder: getProviderDefaultHost(values.type),
+          };
+        },
+        trigger(values, actions) {
+          const current = String(values.api_host ?? '').trim();
+          if (!current || isProviderDefaultHost(current)) {
+            void actions.setFieldValue(
+              'api_host',
+              getProviderDefaultHost(values.type),
+            );
+          }
+        },
+        triggerFields: ['type'],
+      },
       fieldName: 'api_host',
+      help: '空则使用该类型默认地址',
       label: 'API Host',
-      rules: 'required',
     },
     {
       component: 'InputPassword',
       fieldName: 'api_key',
       label: 'API Key',
-      rules: 'required',
+      ...(isEdit
+        ? { help: '留空或保持脱敏值则不修改密钥' }
+        : { rules: 'required' }),
     },
     {
       component: 'RadioGroup',
@@ -253,13 +284,20 @@ export function createProviderSchema(): VbenFormSchema[] {
   ];
 }
 
-export function createModelSchema(): VbenFormSchema[] {
+export function createModelSchema(options?: {
+  providerType?: AIProviderType;
+}): VbenFormSchema[] {
+  const isOpenRouter = options?.providerType === AI_PROVIDER_TYPE.openrouter;
+
   return [
     {
       component: 'Input',
       fieldName: 'model_id',
       label: '模型 ID',
       rules: 'required',
+      ...(isOpenRouter
+        ? { help: '必须包含供应商前缀，例如 openai/gpt-4o-mini' }
+        : {}),
     },
     {
       component: 'Input',

@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import type {
-  AIProviderParams,
-  AIProviderResult,
-  AIProviderUpdateParams,
-} from '../../../api';
+import type { AIProviderResult } from '../../../api';
+import type { AIProviderFormValues } from '../provider-params';
 
 import { computed, onMounted, ref } from 'vue';
 
@@ -31,6 +28,7 @@ import {
   getProviderTypeLabel,
   pickActiveProviderId,
 } from '../data';
+import { createAIProviderPayload } from '../provider-params';
 
 const props = defineProps<{
   activeProviderId?: number;
@@ -146,15 +144,16 @@ const [Modal, modalApi] = useVbenModal({
     const editingId = formData.value?.id;
 
     try {
+      const values = await formApi.getValues<AIProviderFormValues>();
+      const payload = createAIProviderPayload(values);
+
       if (editingId) {
-        const values = await formApi.getValues<AIProviderUpdateParams>();
-        await updateAIProviderApi(editingId, values);
+        await updateAIProviderApi(editingId, payload);
         message.success($t('ui.actionMessage.operationSuccess'));
         await modalApi.close();
         await refreshProviders(editingId);
       } else {
-        const values = await formApi.getValues<AIProviderParams>();
-        await createAIProviderApi(values);
+        await createAIProviderApi(payload);
         message.success($t('ui.actionMessage.operationSuccess'));
         await modalApi.close();
         await refreshProviders();
@@ -173,7 +172,7 @@ const [Modal, modalApi] = useVbenModal({
 
     if (data) {
       formData.value = data;
-      formApi.updateSchema(createProviderSchema());
+      formApi.updateSchema(createProviderSchema({ isEdit: true }));
       formApi.setValues(data);
     } else {
       formData.value = undefined;
