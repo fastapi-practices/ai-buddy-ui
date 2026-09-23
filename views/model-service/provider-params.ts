@@ -1,8 +1,4 @@
-import type {
-  AIProviderParams,
-  AIProviderType,
-  AIStatusType,
-} from '../../api';
+import type { AIProviderParams, AIProviderType, AIStatusType } from '../../api';
 
 export const AI_PROVIDER_TYPE = {
   openai: 0,

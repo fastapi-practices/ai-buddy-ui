@@ -1,5 +1,5 @@
 // 用量、花费、顾问模型和 MCP 写确认走客户端 forwardedProps
-// 向量化走默认向量模型，后台维护搜索密钥、Jev 护栏、文档抽取/OCR、切片和运行参数
+// 向量化按知识库绑定及 RAG 配置选择模型，后台维护搜索密钥、Jev 护栏、文档抽取/OCR、切片和运行参数
 export const AI_EXA_API_KEY = 'AI_EXA_API_KEY';
 export const AI_TAVILY_API_KEY = 'AI_TAVILY_API_KEY';
 export const AI_TYPESAFE_API_KEY = 'AI_TYPESAFE_API_KEY';

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type {
+  AIDefaultModelKind,
   AIDefaultModelParams,
   AIDefaultModelResult,
-  AIModelKind,
+  AIModelOptionsResult,
   AIModelResult,
   AIProviderResult,
 } from '../../api';
@@ -18,10 +19,12 @@ import { message } from 'antdv-next';
 import {
   getAIDefaultModelOptionalApi,
   getAllAIModelApi,
+  getAIModelOptionsApi,
   getAllAIProviderApi,
   updateAIDefaultModelApi,
 } from '../../api';
 import { getProviderTypeLabel } from '../model-service/data';
+import { filterDefaultCandidates } from './candidates';
 
 interface DefaultModelKindForm {
   fetchId: number;
@@ -31,7 +34,7 @@ interface DefaultModelKindForm {
   providerId?: number;
 }
 
-const KIND_LIST: AIModelKind[] = ['chat', 'embedding', 'image'];
+const KIND_LIST: AIDefaultModelKind[] = ['chat', 'embedding', 'image'];
 
 function createKindForm(): DefaultModelKindForm {
   return {
@@ -42,9 +45,14 @@ function createKindForm(): DefaultModelKindForm {
 }
 
 const providers = ref<AIProviderResult[]>([]);
+const defaultCandidates = ref<AIModelOptionsResult['default_candidates']>({
+  chat: [],
+  embedding: [],
+  image: [],
+});
 const loading = ref(false);
 const saving = ref(false);
-const activeKind = ref<AIModelKind>('chat');
+const activeKind = ref<AIDefaultModelKind>('chat');
 const kindForms = {
   chat: reactive(createKindForm()),
   embedding: reactive(createKindForm()),
@@ -67,7 +75,7 @@ const providerOptions = computed(() => {
 const activeForm = computed(() => kindForms[activeKind.value]);
 
 const activeModelOptions = computed(() => {
-  return enabledModels(activeForm.value).map((item) => ({
+  return activeForm.value.models.map((item) => ({
     label:
       item.name && item.name !== item.model_id
         ? `${item.name} · ${item.model_id}`
@@ -87,7 +95,7 @@ const tabItems = computed(() =>
   })),
 );
 
-function kindTabIconClass(kind: AIModelKind) {
+function kindTabIconClass(kind: AIDefaultModelKind) {
   if (kind === 'embedding') {
     return 'icon-[carbon--data-base]';
   }
@@ -97,20 +105,12 @@ function kindTabIconClass(kind: AIModelKind) {
   return 'icon-[carbon--chat]';
 }
 
-function enabledModels(form: DefaultModelKindForm) {
-  return form.models.filter((item) => Number(item.status) === 1);
-}
-
 function applyDefaultModel(
   form: DefaultModelKindForm,
   model: AIDefaultModelResult | null,
 ) {
   form.providerId = model?.provider_id;
   form.modelId = model?.model_id;
-}
-
-async function fetchProviders() {
-  providers.value = await getAllAIProviderApi();
 }
 
 function isDefaultModelAvailable(model: AIDefaultModelResult | null) {
@@ -123,7 +123,7 @@ function isDefaultModelAvailable(model: AIDefaultModelResult | null) {
   return enabledProviders.value.some((item) => item.id === model.provider_id);
 }
 
-async function fetchDefaultModel(kind: AIModelKind) {
+async function fetchDefaultModel(kind: AIDefaultModelKind) {
   const form = kindForms[kind];
   try {
     const model = await getAIDefaultModelOptionalApi(kind);
@@ -138,7 +138,7 @@ async function fetchDefaultModel(kind: AIModelKind) {
   }
 }
 
-async function fetchModelsByProvider(kind: AIModelKind) {
+async function fetchModelsByProvider(kind: AIDefaultModelKind) {
   const form = kindForms[kind];
   const fetchId = ++form.fetchId;
   const providerId = form.providerId;
@@ -157,11 +157,11 @@ async function fetchModelsByProvider(kind: AIModelKind) {
       return;
     }
 
-    form.models = data;
+    form.models = filterDefaultCandidates(data, defaultCandidates.value[kind]);
 
     if (
       form.modelId &&
-      !enabledModels(form).some((item) => item.model_id === form.modelId)
+      !form.models.some((item) => item.model_id === form.modelId)
     ) {
       form.modelId = undefined;
     }
@@ -175,7 +175,12 @@ async function fetchModelsByProvider(kind: AIModelKind) {
 async function refreshPage() {
   loading.value = true;
   try {
-    await fetchProviders();
+    const [nextProviders, options] = await Promise.all([
+      getAllAIProviderApi(),
+      getAIModelOptionsApi(),
+    ]);
+    providers.value = nextProviders;
+    defaultCandidates.value = options.default_candidates;
     const models = await Promise.all(
       KIND_LIST.map(async (kind) => {
         const model = await fetchDefaultModel(kind);
@@ -221,7 +226,7 @@ async function submitDefaultModel() {
     return;
   }
 
-  if (!enabledModels(form).some((item) => item.model_id === form.modelId)) {
+  if (!form.models.some((item) => item.model_id === form.modelId)) {
     message.warning($t('ai-buddy.defaultModelManage.selectRequired'));
     return;
   }

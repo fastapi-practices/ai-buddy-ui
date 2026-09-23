@@ -14,14 +14,17 @@ export type AIProviderType = 0 | 1 | 2 | 3 | 4 | 5;
 export type AIStatusType = 0 | 1;
 export type AIMcpType = 0 | 1 | 2;
 export type AIModelKind = 'chat' | 'embedding' | 'image';
-export type AIModelCapability =
-  | 'audio'
-  | 'document'
-  | 'image'
-  | 'text'
-  | 'thinking'
-  | 'tools'
-  | 'video';
+export type AIDefaultModelKind = AIModelKind;
+export type AIModelCapability = 'thinking' | 'tools';
+export type AIModelModality = 'audio' | 'image' | 'text' | 'vector' | 'video';
+export type AIThinkingLevel = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export interface AIThinkingPolicy {
+  levels: AIThinkingLevel[];
+  default_level: AIThinkingLevel | null;
+  can_disable: boolean;
+  source: 'discovered' | 'manual';
+  verified: boolean;
+}
 export type AIAssistantSortType = 'comprehensive' | 'hottest' | 'newest';
 
 interface AIProviderQueryParams {
@@ -57,6 +60,7 @@ export interface AIProviderModelResult {
   display_name?: null | string;
   kind: AIModelKind;
   capabilities?: AIModelCapability[];
+  input_modalities: AIModelModality[];
   context_window?: null | number;
   max_output_tokens?: null | number;
 }
@@ -74,7 +78,8 @@ export interface AIProviderModelOptionResult {
 
 export interface AIModelOptionsResult {
   providers: AIProviderModelOptionResult[];
-  default_models: Partial<Record<AIModelKind, AIDefaultModelResult | null>>;
+  default_candidates: Record<AIDefaultModelKind, number[]>;
+  default_models: Record<AIDefaultModelKind, AIDefaultModelResult | null>;
 }
 
 export interface AIProviderListResult {
@@ -105,6 +110,8 @@ export interface AIModelParams {
   name?: null | string;
   kind: AIModelKind;
   capabilities?: AIModelCapability[];
+  input_modalities?: AIModelModality[] | null;
+  thinking_policy?: AIThinkingPolicy | null;
   context_window?: null | number;
   max_output_tokens?: null | number;
   sort?: number;
@@ -121,6 +128,8 @@ export interface AIModelResult extends AIModelParams {
   name: string;
   kind: AIModelKind;
   capabilities: AIModelCapability[];
+  input_modalities: AIModelModality[] | null;
+  thinking_policy: AIThinkingPolicy | null;
   sort: number;
   created_time: string;
   updated_time?: null | string;
@@ -134,7 +143,7 @@ export interface AIDefaultModelParams {
 
 export interface AIDefaultModelResult extends AIDefaultModelParams {
   id: number;
-  kind: AIModelKind;
+  kind: AIDefaultModelKind;
   provider_name: string;
   provider_type: AIProviderType;
   created_time: string;
@@ -478,15 +487,15 @@ export async function deleteAIModelApi(pks: number[]) {
   });
 }
 
-function defaultModelPath(kind: AIModelKind) {
+function defaultModelPath(kind: AIDefaultModelKind) {
   return `/api/v1/default-models/${kind}`;
 }
 
-export async function getAIDefaultModelApi(kind: AIModelKind) {
+export async function getAIDefaultModelApi(kind: AIDefaultModelKind) {
   return requestClient.get<AIDefaultModelResult>(defaultModelPath(kind));
 }
 
-export async function getAIDefaultModelOptionalApi(kind: AIModelKind) {
+export async function getAIDefaultModelOptionalApi(kind: AIDefaultModelKind) {
   const response = await fetch(resolveAIBuddyApiUrl(defaultModelPath(kind)), {
     headers: getAIBuddyRequestHeaders(),
     method: 'GET',
@@ -496,7 +505,7 @@ export async function getAIDefaultModelOptionalApi(kind: AIModelKind) {
 }
 
 export async function updateAIDefaultModelApi(
-  kind: AIModelKind,
+  kind: AIDefaultModelKind,
   data: AIDefaultModelParams,
 ) {
   return requestClient.put<AIActionResult>(defaultModelPath(kind), data);

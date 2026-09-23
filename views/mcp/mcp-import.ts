@@ -76,13 +76,11 @@ function extractServerMap(parsed: unknown): Record<string, unknown> {
 }
 
 function toArgs(value: unknown, name: string): null | string[] {
-  if (value == null || value === '') {
+  if (value === null || value === undefined || value === '') {
     return null;
   }
   if (Array.isArray(value)) {
-    const args = value
-      .map((item) => String(item))
-      .filter((item) => item.trim());
+    const args = value.map(String).filter((item) => item.trim());
     return args.length > 0 ? args : null;
   }
   if (typeof value === 'string') {
@@ -97,7 +95,7 @@ function toObject(
   field: string,
   name: string,
 ): null | Record<string, unknown> {
-  if (value == null || value === '') {
+  if (value === null || value === undefined || value === '') {
     return null;
   }
   if (!isRecord(value)) {

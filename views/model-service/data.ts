@@ -1,6 +1,7 @@
 import type {
   AIModelCapability,
   AIModelKind,
+  AIModelModality,
   AIModelResult,
   AIProviderResult,
   AIProviderType,
@@ -13,6 +14,7 @@ import { $t } from '@vben/locales';
 
 import { DictEnum, getDictOptions } from '#/utils/dict';
 
+import { supportsModelKind, THINKING_LEVEL_OPTIONS } from './model-params';
 import {
   AI_PROVIDER_TYPE,
   getProviderDefaultHost,
@@ -34,6 +36,24 @@ export const MODEL_KIND_OPTIONS: { label: string; value: AIModelKind }[] = [
   { label: '绘画', value: 'image' },
 ];
 
+export const MODEL_MODALITY_OPTIONS: {
+  label: string;
+  value: AIModelModality;
+}[] = [
+  { label: '文本', value: 'text' },
+  { label: '图片', value: 'image' },
+  { label: '音频', value: 'audio' },
+  { label: '视频', value: 'video' },
+  { label: '向量', value: 'vector' },
+];
+
+export function getModelModalityLabel(modality: AIModelModality) {
+  return (
+    MODEL_MODALITY_OPTIONS.find((item) => item.value === modality)?.label ??
+    modality
+  );
+}
+
 export const MODEL_CAPABILITY_OPTIONS: {
   color: string;
   icon: string;
@@ -51,36 +71,6 @@ export const MODEL_CAPABILITY_OPTIONS: {
     icon: 'carbon:idea',
     label: '思考',
     value: 'thinking',
-  },
-  {
-    color: 'default',
-    icon: 'carbon:string-text',
-    label: '文本',
-    value: 'text',
-  },
-  {
-    color: 'green',
-    icon: 'carbon:view',
-    label: '图片',
-    value: 'image',
-  },
-  {
-    color: 'purple',
-    icon: 'carbon:video',
-    label: '视频',
-    value: 'video',
-  },
-  {
-    color: 'magenta',
-    icon: 'carbon:volume-up',
-    label: '音频',
-    value: 'audio',
-  },
-  {
-    color: 'gold',
-    icon: 'carbon:document',
-    label: '文档',
-    value: 'document',
   },
 ];
 
@@ -159,8 +149,21 @@ export function useModelColumns(
     {
       field: 'kind',
       title: '类型',
-      width: 90,
+      width: 110,
       formatter: ({ cellValue }) => getModelKindLabel(cellValue),
+    },
+    {
+      field: 'input_modalities',
+      title: '输入模态',
+      minWidth: 110,
+      formatter: ({ cellValue }) =>
+        cellValue?.length
+          ? cellValue
+              .map((modality: AIModelModality) =>
+                getModelModalityLabel(modality),
+              )
+              .join('、')
+          : '-',
     },
     {
       field: 'capabilities',
@@ -303,7 +306,11 @@ export function createModelSchema(options?: {
       component: 'Select',
       componentProps: {
         class: 'w-full',
-        options: MODEL_KIND_OPTIONS,
+        options: MODEL_KIND_OPTIONS.filter(
+          (option) =>
+            options?.providerType === undefined ||
+            supportsModelKind(options.providerType, option.value),
+        ),
       },
       defaultValue: 'chat',
       fieldName: 'kind',
@@ -318,8 +325,102 @@ export function createModelSchema(options?: {
         options: MODEL_CAPABILITY_OPTIONS,
       },
       defaultValue: [],
+      dependencies: {
+        show: (values) => values.kind === 'chat',
+        triggerFields: ['kind'],
+      },
       fieldName: 'capabilities',
-      label: '能力',
+      label: '行为能力',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        class: 'w-full',
+        mode: 'multiple',
+        options: MODEL_MODALITY_OPTIONS,
+      },
+      description: '未指定时按模型类型补全，显式清空表示不支持该模态',
+      fieldName: 'input_modalities',
+      label: '输入模态',
+    },
+    {
+      component: 'Switch',
+      defaultValue: false,
+      dependencies: {
+        show: (values) =>
+          values.kind === 'chat' && values.capabilities?.includes('thinking'),
+        triggerFields: ['kind', 'capabilities'],
+      },
+      fieldName: 'policy_enabled',
+      label: '配置思考策略',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        class: 'w-full',
+        mode: 'multiple',
+        options: THINKING_LEVEL_OPTIONS,
+      },
+      defaultValue: [],
+      dependencies: {
+        show: (values) =>
+          values.kind === 'chat' &&
+          values.capabilities?.includes('thinking') &&
+          values.policy_enabled,
+        triggerFields: ['kind', 'capabilities', 'policy_enabled'],
+      },
+      fieldName: 'policy_levels',
+      label: '支持的思考档位',
+    },
+    {
+      component: 'Select',
+      dependencies: {
+        componentProps: (values) => ({
+          allowClear: true,
+          class: 'w-full',
+          options: THINKING_LEVEL_OPTIONS.filter((option) =>
+            values.policy_levels?.includes(option.value),
+          ),
+        }),
+        show: (values) =>
+          values.kind === 'chat' &&
+          values.capabilities?.includes('thinking') &&
+          values.policy_enabled,
+        triggerFields: [
+          'kind',
+          'capabilities',
+          'policy_enabled',
+          'policy_levels',
+        ],
+      },
+      fieldName: 'policy_default_level',
+      label: '默认思考档位',
+    },
+    {
+      component: 'Switch',
+      defaultValue: false,
+      dependencies: {
+        show: (values) =>
+          values.kind === 'chat' &&
+          values.capabilities?.includes('thinking') &&
+          values.policy_enabled,
+        triggerFields: ['kind', 'capabilities', 'policy_enabled'],
+      },
+      fieldName: 'policy_can_disable',
+      label: '允许关闭思考',
+    },
+    {
+      component: 'Switch',
+      defaultValue: false,
+      dependencies: {
+        show: (values) =>
+          values.kind === 'chat' &&
+          values.capabilities?.includes('thinking') &&
+          values.policy_enabled,
+        triggerFields: ['kind', 'capabilities', 'policy_enabled'],
+      },
+      fieldName: 'policy_verified',
+      label: '已验证可用',
     },
     {
       component: 'InputNumber',
