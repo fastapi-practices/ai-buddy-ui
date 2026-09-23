@@ -16,14 +16,12 @@ export type AIMcpType = 0 | 1 | 2;
 export type AIModelKind = 'chat' | 'embedding' | 'image';
 export type AIDefaultModelKind = AIModelKind;
 export type AIModelCapability = 'thinking' | 'tools';
-export type AIModelModality = 'audio' | 'image' | 'text' | 'vector' | 'video';
+export type AIModelModality = 'audio' | 'image' | 'text' | 'video';
 export type AIThinkingLevel = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
 export interface AIThinkingPolicy {
   levels: AIThinkingLevel[];
   default_level: AIThinkingLevel | null;
   can_disable: boolean;
-  source: 'discovered' | 'manual';
-  verified: boolean;
 }
 export type AIAssistantSortType = 'comprehensive' | 'hottest' | 'newest';
 

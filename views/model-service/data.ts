@@ -14,7 +14,12 @@ import { $t } from '@vben/locales';
 
 import { DictEnum, getDictOptions } from '#/utils/dict';
 
-import { supportsModelKind, THINKING_LEVEL_OPTIONS } from './model-params';
+import {
+  allowedModelModalities,
+  normalizeModelModalities,
+  supportsModelKind,
+  THINKING_LEVEL_OPTIONS,
+} from './model-params';
 import {
   AI_PROVIDER_TYPE,
   getProviderDefaultHost,
@@ -44,7 +49,6 @@ export const MODEL_MODALITY_OPTIONS: {
   { label: '图片', value: 'image' },
   { label: '音频', value: 'audio' },
   { label: '视频', value: 'video' },
-  { label: '向量', value: 'vector' },
 ];
 
 export function getModelModalityLabel(modality: AIModelModality) {
@@ -337,9 +341,33 @@ export function createModelSchema(options?: {
       componentProps: {
         class: 'w-full',
         mode: 'multiple',
-        options: MODEL_MODALITY_OPTIONS,
       },
-      description: '未指定时按模型类型补全，显式清空表示不支持该模态',
+      dependencies: {
+        componentProps: (values) => ({
+          class: 'w-full',
+          mode: 'multiple',
+          options: MODEL_MODALITY_OPTIONS.filter((option) =>
+            allowedModelModalities(values.kind ?? 'chat').includes(
+              option.value,
+            ),
+          ),
+        }),
+        trigger(values, actions) {
+          const selected = values.input_modalities;
+          if (!Array.isArray(selected)) {
+            return;
+          }
+          const next = normalizeModelModalities(
+            values.kind ?? 'chat',
+            selected,
+          );
+          if (next.length !== selected.length) {
+            void actions.setFieldValue('input_modalities', next);
+          }
+        },
+        triggerFields: ['kind'],
+      },
+      description: '选择时需包含文本；清空后使用模型类型默认输入模态',
       fieldName: 'input_modalities',
       label: '输入模态',
     },
@@ -408,19 +436,6 @@ export function createModelSchema(options?: {
       },
       fieldName: 'policy_can_disable',
       label: '允许关闭思考',
-    },
-    {
-      component: 'Switch',
-      defaultValue: false,
-      dependencies: {
-        show: (values) =>
-          values.kind === 'chat' &&
-          values.capabilities?.includes('thinking') &&
-          values.policy_enabled,
-        triggerFields: ['kind', 'capabilities', 'policy_enabled'],
-      },
-      fieldName: 'policy_verified',
-      label: '已验证可用',
     },
     {
       component: 'InputNumber',
