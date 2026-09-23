@@ -5,6 +5,7 @@ import {
   createAIModelPayload,
   supportsModelKind,
   thinkingPolicyFormValues,
+  validateModelModalities,
   validateThinkingPolicy,
 } from './model-params';
 
@@ -38,6 +39,11 @@ describe('createAIBatchModelPayload', () => {
           capabilities: ['tools'],
           input_modalities: ['text'],
         },
+        {
+          id: 'image-v1',
+          kind: 'image',
+          input_modalities: [],
+        },
       ]),
     ).toEqual({
       items: [
@@ -67,8 +73,72 @@ describe('createAIBatchModelPayload', () => {
           sort: 0,
           status: 1,
         },
+        {
+          provider_id: 7,
+          model_id: 'image-v1',
+          name: null,
+          kind: 'image',
+          capabilities: [],
+          input_modalities: null,
+          context_window: null,
+          max_output_tokens: null,
+          remark: null,
+          sort: 0,
+          status: 1,
+        },
       ],
     });
+  });
+});
+
+describe('validateModelModalities', () => {
+  it('requires text when explicitly choosing input modalities', () => {
+    expect(
+      validateModelModalities({ kind: 'chat', model_id: 'test', status: 1 }),
+    ).toBeNull();
+    expect(
+      validateModelModalities({
+        kind: 'chat',
+        model_id: 'test',
+        input_modalities: [],
+        status: 1,
+      }),
+    ).toBeNull();
+    expect(
+      validateModelModalities({
+        kind: 'chat',
+        model_id: 'test',
+        input_modalities: ['image'],
+        status: 1,
+      }),
+    ).toBe('输入模态必须包含文本');
+  });
+
+  it('rejects modalities unsupported by the selected kind', () => {
+    expect(
+      validateModelModalities({
+        kind: 'chat',
+        model_id: 'test',
+        input_modalities: ['text', 'video'],
+        status: 1,
+      }),
+    ).toBeNull();
+    expect(
+      validateModelModalities({
+        kind: 'embedding',
+        model_id: 'test',
+        input_modalities: ['text', 'image'],
+        status: 1,
+      }),
+    ).toBe('当前模型类型不支持所选输入模态');
+    expect(
+      validateModelModalities({
+        kind: 'image',
+        model_id: 'test',
+        input_modalities: ['text', 'audio'],
+        status: 1,
+      }),
+    ).toBe('当前模型类型不支持所选输入模态');
   });
 });
 
@@ -103,7 +173,7 @@ describe('createAIModelPayload', () => {
     });
   });
 
-  it('distinguishes inferred input modalities from an explicitly empty selection', () => {
+  it('uses kind defaults when input modalities are unspecified', () => {
     expect(
       createAIModelPayload(7, {
         kind: 'chat',
@@ -121,9 +191,17 @@ describe('createAIModelPayload', () => {
         model_id: 'embedding-v1',
         input_modalities: [],
         status: 1,
+      }).input_modalities,
+    ).toBeNull();
+    expect(
+      createAIModelPayload(7, {
+        kind: 'embedding',
+        model_id: 'embedding-v1',
+        input_modalities: ['text'],
+        status: 1,
       }),
     ).toMatchObject({
-      input_modalities: [],
+      input_modalities: ['text'],
       kind: 'embedding',
     });
   });
@@ -141,7 +219,7 @@ describe('createAIModelPayload', () => {
     expect(payload.thinking_policy).toBeNull();
   });
 
-  it('sends a verified manual policy for supported chat models', () => {
+  it('sends only the supported thinking policy fields for chat models', () => {
     const values = {
       capabilities: ['thinking'] as const,
       kind: 'chat' as const,
@@ -150,7 +228,6 @@ describe('createAIModelPayload', () => {
       policy_default_level: 'medium' as const,
       policy_enabled: true,
       policy_levels: ['low', 'medium'] as const,
-      policy_verified: true,
       status: 1 as const,
     };
     const formValues = {
@@ -163,8 +240,6 @@ describe('createAIModelPayload', () => {
       levels: ['low', 'medium'],
       default_level: 'medium',
       can_disable: true,
-      source: 'manual',
-      verified: true,
     });
     expect(
       createAIModelPayload(7, {
@@ -209,50 +284,21 @@ describe('createAIModelPayload', () => {
       levels: [],
       default_level: null,
       can_disable: true,
-      source: 'manual',
-      verified: false,
     });
   });
 
-  it('preserves discovered source until the policy changes', () => {
-    const original = {
-      levels: ['low' as const],
-      default_level: 'low' as const,
-      can_disable: false,
-      source: 'discovered' as const,
-      verified: true,
-    };
-    const values = {
-      capabilities: ['thinking' as const],
-      kind: 'chat' as const,
-      model_id: 'reasoner',
-      ...thinkingPolicyFormValues(original),
-      status: 1 as const,
-    };
-    expect(
-      createAIModelPayload(7, values, original).thinking_policy?.source,
-    ).toBe('discovered');
-    expect(
-      createAIModelPayload(7, { ...values, policy_can_disable: true }, original)
-        .thinking_policy?.source,
-    ).toBe('manual');
-  });
-
-  it('loads discovered policies without marking them verified', () => {
+  it('loads a policy without unsupported metadata fields', () => {
     expect(
       thinkingPolicyFormValues({
         levels: ['minimal'],
         default_level: null,
         can_disable: false,
-        source: 'discovered',
-        verified: false,
       }),
     ).toEqual({
       policy_can_disable: false,
       policy_default_level: undefined,
       policy_enabled: true,
       policy_levels: ['minimal'],
-      policy_verified: false,
     });
     expect(thinkingPolicyFormValues(null).policy_enabled).toBe(false);
   });

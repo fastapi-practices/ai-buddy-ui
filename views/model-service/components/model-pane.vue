@@ -58,6 +58,7 @@ import {
   createAIBatchModelPayload,
   createAIModelPayload,
   thinkingPolicyFormValues,
+  validateModelModalities,
   validateThinkingPolicy,
 } from '../model-params';
 import { AI_PROVIDER_TYPE } from '../provider-params';
@@ -378,6 +379,11 @@ const [Modal, modalApi] = useVbenModal({
     }
 
     const values = await formApi.getValues<AIModelFormValues>();
+    const modalityError = validateModelModalities(values);
+    if (modalityError) {
+      message.warning(modalityError);
+      return;
+    }
     const policyError = validateThinkingPolicy(values);
     if (policyError) {
       message.warning(policyError);
@@ -394,11 +400,7 @@ const [Modal, modalApi] = useVbenModal({
     }
 
     modalApi.lock();
-    const payload = createAIModelPayload(
-      props.provider.id,
-      values,
-      formData.value?.thinking_policy,
-    );
+    const payload = createAIModelPayload(props.provider.id, values);
 
     try {
       await (formData.value?.id
