@@ -2,7 +2,6 @@
 import type { CSSProperties } from 'vue';
 
 import type {
-  AIBatchCreateModelsParams,
   AIModelResult,
   AIProviderModelResult,
   AIProviderResult,
@@ -51,10 +50,16 @@ import {
   getModelCapabilityColor,
   getModelCapabilityIcon,
   getModelCapabilityLabel,
+  getModelModalityLabel,
   queryModelSchema,
   useModelColumns,
 } from '../data';
-import { createAIModelPayload } from '../model-params';
+import {
+  createAIBatchModelPayload,
+  createAIModelPayload,
+  thinkingPolicyFormValues,
+  validateThinkingPolicy,
+} from '../model-params';
 import { AI_PROVIDER_TYPE } from '../provider-params';
 
 const props = defineProps<{
@@ -311,27 +316,11 @@ async function submitBatchAddModels() {
     return;
   }
 
-  const providerId = props.provider.id;
-  const remoteById = new Map(
-    providerModels.value.map((item) => [item.id, item]),
+  const selectedIds = new Set(selectedProviderModelIds.value);
+  const payload = createAIBatchModelPayload(
+    props.provider.id,
+    providerModels.value.filter((model) => selectedIds.has(model.id)),
   );
-  const payload: AIBatchCreateModelsParams = {
-    items: selectedProviderModelIds.value.map((modelId) => {
-      const remote = remoteById.get(modelId);
-      return {
-        capabilities: remote?.capabilities ?? [],
-        context_window: remote?.context_window ?? null,
-        kind: remote?.kind ?? 'chat',
-        max_output_tokens: remote?.max_output_tokens ?? null,
-        model_id: modelId,
-        name: remote?.display_name?.trim() || null,
-        provider_id: providerId,
-        remark: null,
-        sort: 0,
-        status: 1 as const,
-      };
-    }),
-  };
 
   syncDrawerApi.lock();
 
@@ -389,6 +378,11 @@ const [Modal, modalApi] = useVbenModal({
     }
 
     const values = await formApi.getValues<AIModelFormValues>();
+    const policyError = validateThinkingPolicy(values);
+    if (policyError) {
+      message.warning(policyError);
+      return;
+    }
     if (
       props.provider.type === AI_PROVIDER_TYPE.openrouter &&
       !values.model_id.includes('/')
@@ -400,7 +394,11 @@ const [Modal, modalApi] = useVbenModal({
     }
 
     modalApi.lock();
-    const payload = createAIModelPayload(props.provider.id, values);
+    const payload = createAIModelPayload(
+      props.provider.id,
+      values,
+      formData.value?.thinking_policy,
+    );
 
     try {
       await (formData.value?.id
@@ -423,7 +421,10 @@ const [Modal, modalApi] = useVbenModal({
 
     if (data) {
       formData.value = data;
-      formApi.setValues(data);
+      formApi.setValues({
+        ...data,
+        ...thinkingPolicyFormValues(data.thinking_policy ?? null),
+      });
     } else {
       formData.value = undefined;
     }
@@ -555,12 +556,21 @@ const [Modal, modalApi] = useVbenModal({
                       :disabled="isExistingModel(item.id)"
                       :value="item.id"
                     >
-                      <span class="break-all text-sm text-foreground">
-                        {{
-                          item.display_name
-                            ? `${item.display_name} · ${item.id}`
-                            : item.id
-                        }}
+                      <span class="flex min-w-0 flex-col gap-1">
+                        <span class="break-all text-sm text-foreground">
+                          {{
+                            item.display_name
+                              ? `${item.display_name} · ${item.id}`
+                              : item.id
+                          }}
+                        </span>
+                        <span class="text-xs text-muted-foreground">
+                          输入：{{
+                            item.input_modalities
+                              ?.map(getModelModalityLabel)
+                              .join('、') || '-'
+                          }}
+                        </span>
                       </span>
                     </a-checkbox>
                     <a-space

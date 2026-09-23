@@ -39,11 +39,14 @@ describe('provider params', () => {
   });
 
   it('resolves empty api host to the provider default', () => {
+    expect(resolveProviderApiHost(AI_PROVIDER_TYPE.google, '  ')).toBe(
+      'https://generativelanguage.googleapis.com',
+    );
     expect(
-      resolveProviderApiHost(AI_PROVIDER_TYPE.google, '  '),
-    ).toBe('https://generativelanguage.googleapis.com');
-    expect(
-      resolveProviderApiHost(AI_PROVIDER_TYPE.openai, ' https://custom.example/ '),
+      resolveProviderApiHost(
+        AI_PROVIDER_TYPE.openai,
+        ' https://custom.example/ ',
+      ),
     ).toBe('https://custom.example');
   });
 

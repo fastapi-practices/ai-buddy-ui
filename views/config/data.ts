@@ -1,7 +1,5 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import OnnxModelPicker from './onnx-model-picker.vue';
-
 import {
   AI_COMPACTION_KEEP_MESSAGES,
   AI_COMPACTION_MAX_MESSAGES,
@@ -32,6 +30,7 @@ import {
   AI_UNSTRUCTURED_API_KEY,
   AI_UNSTRUCTURED_API_URL,
 } from './config-keys';
+import OnnxModelPicker from './onnx-model-picker.vue';
 
 function isMistralBackend(values: Partial<Record<string, any>>): boolean {
   return (
@@ -43,11 +42,13 @@ function isMistralBackend(values: Partial<Record<string, any>>): boolean {
 export const searchEngineSchema: VbenFormSchema[] = [
   {
     component: 'InputPassword',
+    description: '用于 Exa 联网搜索。获取 https://dashboard.exa.ai',
     fieldName: AI_EXA_API_KEY,
     label: 'Exa API Key',
   },
   {
     component: 'InputPassword',
+    description: '用于 Tavily 联网搜索。获取 https://app.tavily.com/home',
     fieldName: AI_TAVILY_API_KEY,
     label: 'Tavily API Key',
   },
@@ -101,7 +102,7 @@ export const ragEmbedSchema: VbenFormSchema[] = [
     },
     defaultValue: 'remote',
     description:
-      '远程使用默认向量模型，知识库可单独覆盖；本地需先下载模型后才能保存',
+      '知识库未指定向量模型时，远程模式需要已配置的默认向量模型；本地模式使用已下载的 ONNX 模型',
     fieldName: AI_EMBEDDING_BACKEND,
     label: '向量化方式',
   },
@@ -244,12 +245,11 @@ export const ragOcrSchema: VbenFormSchema[] = [
         { label: 'Tesseract', value: 'tesseract' },
         { label: 'PaddleOCR', value: 'paddleocr' },
         { label: '本地 ONNX', value: 'onnx' },
-        { label: '默认对话模型（识图）', value: 'vision' },
+        { label: '默认对话模型（需识图能力）', value: 'vision' },
         { label: 'Mistral OCR', value: 'mistral' },
       ],
     },
     defaultValue: 'system',
-    description: '用于图片和扫描 PDF；识图使用默认对话模型，需具备图像能力',
     fieldName: AI_OCR_BACKEND,
     label: 'OCR 方式',
   },
@@ -365,6 +365,7 @@ export const runtimeSchema: VbenFormSchema[] = [
       precision: 0,
     },
     defaultValue: 40,
+    description: '压缩历史对话时保留的最近消息数',
     fieldName: AI_COMPACTION_KEEP_MESSAGES,
     label: '压缩保留消息数',
   },
@@ -376,6 +377,7 @@ export const runtimeSchema: VbenFormSchema[] = [
       precision: 0,
     },
     defaultValue: 80,
+    description: '历史消息数超过此值时，尝试压缩较早的消息',
     fieldName: AI_COMPACTION_MAX_MESSAGES,
     label: '压缩触发阈值',
   },
@@ -391,7 +393,6 @@ export const jevSchema: VbenFormSchema[] = [
   {
     component: 'Input',
     defaultValue: 'jev-latest',
-    description: 'jev-latest、jev-preview 或版本号如 jev-1.13.0',
     fieldName: AI_JEV_MODEL,
     label: 'Jev 模型',
   },
