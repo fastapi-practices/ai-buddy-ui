@@ -1,7 +1,6 @@
 import type {
   AIModelCapability,
   AIModelKind,
-  AIModelModality,
   AIModelResult,
   AIProviderResult,
   AIProviderType,
@@ -20,11 +19,19 @@ import {
   supportsModelKind,
   THINKING_LEVEL_OPTIONS,
 } from './model-params';
+import { MODEL_MODALITY_OPTIONS } from './model-modalities';
 import {
   AI_PROVIDER_TYPE,
   getProviderDefaultHost,
   isProviderDefaultHost,
 } from './provider-params';
+
+export {
+  getModelModalityColor,
+  getModelModalityIcon,
+  getModelModalityLabel,
+  MODEL_MODALITY_OPTIONS,
+} from './model-modalities';
 
 export const PROVIDER_TYPE_OPTIONS = [
   { label: 'OpenAI', value: 0 },
@@ -40,23 +47,6 @@ export const MODEL_KIND_OPTIONS: { label: string; value: AIModelKind }[] = [
   { label: '向量', value: 'embedding' },
   { label: '绘画', value: 'image' },
 ];
-
-export const MODEL_MODALITY_OPTIONS: {
-  label: string;
-  value: AIModelModality;
-}[] = [
-  { label: '文本', value: 'text' },
-  { label: '图片', value: 'image' },
-  { label: '音频', value: 'audio' },
-  { label: '视频', value: 'video' },
-];
-
-export function getModelModalityLabel(modality: AIModelModality) {
-  return (
-    MODEL_MODALITY_OPTIONS.find((item) => item.value === modality)?.label ??
-    modality
-  );
-}
 
 export const MODEL_CAPABILITY_OPTIONS: {
   color: string;
@@ -159,20 +149,14 @@ export function useModelColumns(
     {
       field: 'input_modalities',
       title: '输入模态',
-      minWidth: 110,
-      formatter: ({ cellValue }) =>
-        cellValue?.length
-          ? cellValue
-              .map((modality: AIModelModality) =>
-                getModelModalityLabel(modality),
-              )
-              .join('、')
-          : '-',
+      minWidth: 140,
+      align: 'left',
+      slots: { default: 'input_modalities' },
     },
     {
       field: 'capabilities',
       title: '能力',
-      minWidth: 200,
+      minWidth: 100,
       align: 'left',
       slots: { default: 'capabilities' },
     },
@@ -193,19 +177,20 @@ export function useModelColumns(
       field: 'remark',
       title: $t('common.table.mark'),
       align: 'left',
+      width: 200,
     },
     {
       field: 'operation',
       title: $t('common.table.operation'),
       align: 'center',
       fixed: 'right',
-      width: 100,
+      width: 165,
       cellRender: {
         attrs: {
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: ['edit'],
+        options: [{ code: 'architecture', text: '同步架构' }, 'edit'],
       },
     },
   ];

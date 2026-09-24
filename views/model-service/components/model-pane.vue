@@ -28,6 +28,7 @@ import {
   IconifyIcon,
   MaterialSymbolsAdd,
   MaterialSymbolsDelete,
+  RotateCw,
 } from '@vben/icons';
 import { $t } from '@vben/locales';
 
@@ -40,16 +41,21 @@ import {
   batchCreateAIModelApi,
   createAIModelApi,
   deleteAIModelApi,
+  getAIModelArchitectureApi,
+  getAIModelDetailApi,
   getAIModelListApi,
   getAIProviderModelsApi,
   getAllAIModelApi,
   updateAIModelApi,
 } from '../../../api';
+import { syncArchitecturePayload } from '../architecture';
 import {
   createModelSchema,
   getModelCapabilityColor,
   getModelCapabilityIcon,
   getModelCapabilityLabel,
+  getModelModalityColor,
+  getModelModalityIcon,
   getModelModalityLabel,
   queryModelSchema,
   useModelColumns,
@@ -150,6 +156,7 @@ const gridOptions: VxeTableGridOptions<AIModelResult> = {
 };
 
 const checkedRows = ref<number[]>([]);
+const architectureLoading = ref(false);
 const deleteLoading = ref(false);
 const deleteDisable = computed(() => checkedRows.value.length === 0);
 
@@ -253,6 +260,10 @@ function handleBatchDelete() {
 
 function onActionClick({ code, row }: OnActionClickParams<AIModelResult>) {
   switch (code) {
+    case 'architecture': {
+      void syncArchitecture(row);
+      break;
+    }
     case 'edit': {
       modalApi.setData(row).open();
       break;
@@ -262,6 +273,34 @@ function onActionClick({ code, row }: OnActionClickParams<AIModelResult>) {
 
 function isExistingModel(modelId: string) {
   return existingModelIdSet.value.has(modelId);
+}
+
+async function syncArchitecture(row: AIModelResult) {
+  if (architectureLoading.value) return;
+  architectureLoading.value = true;
+  try {
+    const [model, suggestion] = await Promise.all([
+      getAIModelDetailApi(row.id),
+      getAIModelArchitectureApi(row.id),
+    ]);
+    const payload = syncArchitecturePayload(model, suggestion);
+    if (!payload) {
+      message.info('模型架构已是最新');
+      return;
+    }
+    const modalityError = validateModelModalities(payload);
+    if (modalityError) {
+      message.warning(modalityError);
+      return;
+    }
+    await updateAIModelApi(row.id, payload);
+    message.success('模型架构已更新');
+    onRefresh();
+  } catch (error) {
+    message.error((error as Error).message || '同步模型架构失败');
+  } finally {
+    architectureLoading.value = false;
+  }
 }
 
 function resetBatchAddState() {
@@ -458,6 +497,7 @@ const [Modal, modalApi] = useVbenModal({
             variant="outline"
             @click="openSyncDrawer"
           >
+            <RotateCw class="mr-1 size-4" />
             同步模型
           </VbenButton>
           <VbenButton
@@ -470,6 +510,25 @@ const [Modal, modalApi] = useVbenModal({
             <MaterialSymbolsDelete class="size-5" />
             批量删除
           </VbenButton>
+        </template>
+        <template #input_modalities="{ row }">
+          <a-space v-if="row.input_modalities?.length" :size="4" wrap>
+            <a-tooltip
+              v-for="item in row.input_modalities"
+              :key="item"
+              :title="getModelModalityLabel(item)"
+            >
+              <a-tag
+                :color="getModelModalityColor(item)"
+                :styles="capabilityTagStyles"
+              >
+                <template #icon>
+                  <IconifyIcon :icon="getModelModalityIcon(item)" />
+                </template>
+              </a-tag>
+            </a-tooltip>
+          </a-space>
+          <span v-else>-</span>
         </template>
         <template #capabilities="{ row }">
           <a-space v-if="row.capabilities?.length" :size="4" wrap>

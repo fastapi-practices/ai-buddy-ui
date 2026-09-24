@@ -102,6 +102,18 @@ export interface AIAllModelQueryParams {
   capability?: AIModelCapability;
 }
 
+export interface AIModelArchitectureSuggestion {
+  source: string;
+  last_updated: null | string;
+  kind: AIModelKind | null;
+  input_modalities: AIModelModality[] | null;
+  tools: boolean | null;
+  thinking: boolean | null;
+  thinking_policy: AIThinkingPolicy | null;
+  context_window: number | null;
+  max_output_tokens: number | null;
+}
+
 export interface AIModelParams {
   provider_id: number;
   model_id: string;
@@ -449,6 +461,12 @@ export async function getAIProviderModelsApi(pk: number) {
 
 export async function getAIModelDetailApi(pk: number) {
   return requestClient.get<AIModelResult>(`/api/v1/models/${pk}`);
+}
+
+export async function getAIModelArchitectureApi(pk: number) {
+  return requestClient.get<AIModelArchitectureSuggestion>(
+    `/api/v1/models/${pk}/architecture`,
+  );
 }
 
 export async function getAIModelListApi(params?: AIModelQueryParams) {
