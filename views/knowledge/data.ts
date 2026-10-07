@@ -1,10 +1,12 @@
 import type { AIKnowledgeBaseResult } from '../../api';
+import type { KnowledgeEmbeddingMode } from './knowledge-params';
 
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 
 import { $t } from '@vben/locales';
 
+import OnnxModelPicker from '../config/onnx-model-picker.vue';
 import { ownerColumn } from '../owner';
 
 export const queryKnowledgeSchema: VbenFormSchema[] = [
@@ -79,6 +81,7 @@ export function createKnowledgeBaseSchema(
   providerOptions: { label: string; value: number }[],
   modelOptions: { label: string; value: string }[],
   onProviderChange?: (providerId?: number) => void,
+  onEmbeddingModeChange?: (mode: KnowledgeEmbeddingMode) => void,
 ): VbenFormSchema[] {
   return [
     {
@@ -95,13 +98,42 @@ export function createKnowledgeBaseSchema(
     {
       component: 'Select',
       componentProps: {
+        class: 'w-full',
+        options: [
+          {
+            label: $t('ai-buddy.knowledgeManage.embeddingDefault'),
+            value: 'default',
+          },
+          {
+            label: $t('ai-buddy.knowledgeManage.embeddingRemote'),
+            value: 'remote',
+          },
+          {
+            label: $t('ai-buddy.knowledgeManage.embeddingLocal'),
+            value: 'local',
+          },
+        ],
+        onChange: (value: KnowledgeEmbeddingMode) =>
+          onEmbeddingModeChange?.(value),
+      },
+      defaultValue: 'default',
+      fieldName: 'embedding_mode',
+      help: $t('ai-buddy.knowledgeManage.embeddingHelp'),
+      label: $t('ai-buddy.knowledgeManage.embeddingMode'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
         allowClear: true,
         class: 'w-full',
         options: providerOptions,
         onChange: (value: number | undefined) => onProviderChange?.(value),
       },
+      dependencies: {
+        show: (values) => values.embedding_mode === 'remote',
+        triggerFields: ['embedding_mode'],
+      },
       fieldName: 'provider_id',
-      help: $t('ai-buddy.knowledgeManage.embeddingHelp'),
       label: $t('ai-buddy.knowledgeManage.embeddingProvider'),
     },
     {
@@ -111,9 +143,28 @@ export function createKnowledgeBaseSchema(
         class: 'w-full',
         options: modelOptions,
       },
+      dependencies: {
+        show: (values) => values.embedding_mode === 'remote',
+        triggerFields: ['embedding_mode'],
+      },
       fieldName: 'model_id',
-      help: $t('ai-buddy.knowledgeManage.embeddingHelp'),
       label: $t('ai-buddy.knowledgeManage.embeddingModel'),
+    },
+    {
+      component: OnnxModelPicker,
+      componentProps: {
+        class: 'w-full',
+        source: 'embedding',
+      },
+      dependencies: {
+        show: (values) => values.embedding_mode === 'local',
+        triggerFields: ['embedding_mode'],
+      },
+      fieldName: 'local_model_id',
+      formItemClass:
+        'col-span-full !items-start [&_.overflow-hidden]:!overflow-visible [&_[data-state=open]]:!h-auto',
+      label: $t('ai-buddy.knowledgeManage.localEmbeddingModel'),
+      modelPropName: 'value',
     },
   ];
 }

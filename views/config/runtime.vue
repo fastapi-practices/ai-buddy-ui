@@ -15,6 +15,8 @@ import { getAllAIConfigApi, updateAIConfigApi } from '../../api';
 import { pickRuntimeConfigs } from './config-keys';
 import { runtimeSchema } from './data';
 
+defineProps<{ isMobile?: boolean }>();
+
 const [Form, formApi] = useVbenForm({
   showDefaultActions: false,
   schema: runtimeSchema,
@@ -100,7 +102,7 @@ defineExpose({
 <template>
   <a-spin :spinning="loading">
     <div>
-      <Form />
+      <Form :layout="isMobile ? 'vertical' : 'horizontal'" />
       <VbenButton
         v-show="editButtonShow"
         class="ml-1.5 mt-3"

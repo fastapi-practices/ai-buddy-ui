@@ -12,8 +12,10 @@ import { message } from 'antdv-next';
 import { useVbenForm } from '#/adapter/form';
 
 import { getAllAIConfigApi, updateAIConfigApi } from '../../api';
-import { AI_JEV_INPUT_THRESHOLD, pickJevConfigs } from './config-keys';
+import { AI_BUDDY_JEV_INPUT_THRESHOLD, pickJevConfigs } from './config-keys';
 import { jevSchema } from './data';
+
+defineProps<{ isMobile?: boolean }>();
 
 const [Form, formApi] = useVbenForm({
   showDefaultActions: false,
@@ -33,7 +35,7 @@ const saveLoading = ref<boolean>(false);
 const configData = ref<AIConfigResult[]>([]);
 
 function formValue(config: AIConfigResult) {
-  if (config.key !== AI_JEV_INPUT_THRESHOLD) {
+  if (config.key !== AI_BUDDY_JEV_INPUT_THRESHOLD) {
     return config.value;
   }
   const numericValue = Number(config.value);
@@ -105,7 +107,7 @@ defineExpose({
 <template>
   <a-spin :spinning="loading">
     <div>
-      <Form />
+      <Form :layout="isMobile ? 'vertical' : 'horizontal'" />
       <VbenButton
         v-show="editButtonShow"
         class="ml-1.5 mt-3"

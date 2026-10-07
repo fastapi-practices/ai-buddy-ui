@@ -4,12 +4,15 @@ import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
 import { Page } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
 import Jev from './jev.vue';
 import Rag from './rag.vue';
 import Runtime from './runtime.vue';
 import SearchEngine from './search-engine.vue';
 
 const activeKey = ref('0');
+const isMobile = useBreakpoints(breakpointsTailwind).smaller('md');
 
 const searchEngineRef = ref();
 const ragRef = ref();
@@ -83,16 +86,32 @@ onMounted(async () => {
       <a-tabs
         class="h-full"
         v-model:active-key="activeKey"
-        tab-placement="start"
+        :tab-placement="isMobile ? 'top' : 'start'"
         animated
-        :tab-bar-style="{ width: '16%' }"
+        :tab-bar-style="isMobile ? undefined : { width: '16%' }"
         :items="tabItems"
       >
         <template #contentRender="{ item }">
-          <SearchEngine v-if="item.key === '0'" ref="searchEngineRef" />
-          <Rag v-else-if="item.key === '1'" ref="ragRef" />
-          <Runtime v-else-if="item.key === '2'" ref="runtimeRef" />
-          <Jev v-else-if="item.key === '3'" ref="jevRef" />
+          <SearchEngine
+            v-if="item.key === '0'"
+            ref="searchEngineRef"
+            :is-mobile="isMobile"
+          />
+          <Rag
+            v-else-if="item.key === '1'"
+            ref="ragRef"
+            :is-mobile="isMobile"
+          />
+          <Runtime
+            v-else-if="item.key === '2'"
+            ref="runtimeRef"
+            :is-mobile="isMobile"
+          />
+          <Jev
+            v-else-if="item.key === '3'"
+            ref="jevRef"
+            :is-mobile="isMobile"
+          />
         </template>
       </a-tabs>
     </a-card>

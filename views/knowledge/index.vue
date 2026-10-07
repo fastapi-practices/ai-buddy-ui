@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type {
-  AIKnowledgeBaseParams,
   AIKnowledgeBaseResult,
   AIKnowledgeDocumentResult,
   AIModelResult,
+  AIOnnxDownloadStatus,
+  AIOnnxOption,
   AIProviderResult,
 } from '../../api';
+import type { AIKnowledgeBaseFormValues } from './knowledge-params';
 
 import type { VbenFormProps } from '#/adapter/form';
 import type {
@@ -13,13 +15,13 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, provide, ref } from 'vue';
 
 import { Page, useVbenDrawer, useVbenModal, VbenButton } from '@vben/common-ui';
 import { IconifyIcon, MaterialSymbolsAdd } from '@vben/icons';
 import { $t } from '@vben/locales';
 
-import { message } from 'antdv-next';
+import { Modal as AntModal, message } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
@@ -29,7 +31,10 @@ import {
   createAIKnowledgeDocumentApi,
   deleteAIKnowledgeBaseApi,
   deleteAIKnowledgeDocumentApi,
+  downloadAIOnnxModelApi,
   getAIKnowledgeBaseListApi,
+  getAIOnnxDownloadStatusApi,
+  getAIOnnxOptionsApi,
   getAllAIKnowledgeDocumentApi,
   getAllAIModelApi,
   getAllAIProviderApi,
@@ -40,12 +45,22 @@ import {
   takeKnowledgeUploadFiles,
 } from '../../api/upload-file';
 import UploadDropzone from '../components/upload-dropzone.vue';
+import { DEFAULT_EMBEDDING_ONNX_MODELS } from '../config/onnx-catalog';
+import OnnxModelPicker from '../config/onnx-model-picker.vue';
+import { ONNX_PICKER_KEY } from '../config/onnx-picker-context';
+import { formatOnnxSize } from '../config/onnx-size';
 import { getProviderTypeLabel } from '../model-service/data';
 import {
   createKnowledgeBaseSchema,
   queryKnowledgeSchema,
   useKnowledgeColumns,
 } from './data';
+import {
+  createAIKnowledgeBasePayload,
+  getKnowledgeEmbeddingIssue,
+  resetKnowledgeEmbeddingBinding,
+  toAIKnowledgeBaseFormValues,
+} from './knowledge-params';
 
 interface SelectOption<T extends number | string = number> {
   label: string;
@@ -101,6 +116,12 @@ const [Grid, gridApi] = useVbenVxeGrid({
 const formData = ref<AIKnowledgeBaseResult>();
 const providerOptions = ref<SelectOption[]>([]);
 const modelOptions = ref<SelectOption<string>[]>([]);
+const onnxModels = ref<AIOnnxOption[]>([...DEFAULT_EMBEDDING_ONNX_MODELS]);
+const onnxCacheDir = ref('');
+const downloadingModel = ref('');
+let embeddingModelRequest = 0;
+let onnxDownloadSession = 0;
+let onnxDownloadTimer: ReturnType<typeof setTimeout> | undefined;
 const currentBase = ref<AIKnowledgeBaseResult>();
 const documents = ref<AIKnowledgeDocumentResult[]>([]);
 const documentsLoading = ref(false);
@@ -131,16 +152,25 @@ function modelLabel(item: AIModelResult) {
 }
 
 async function loadEmbeddingModels(providerId?: number) {
-  if (!providerId) {
-    modelOptions.value = [];
+  const request = ++embeddingModelRequest;
+  modelOptions.value = [];
+  if (providerId == null) {
     return;
   }
   const models = await getAllAIModelApi({
     kind: 'embedding',
     provider_id: providerId,
   });
+  if (request !== embeddingModelRequest) {
+    return;
+  }
   modelOptions.value = models
-    .filter((item) => Number(item.status) === 1)
+    .filter(
+      (item) =>
+        Number(item.status) === 1 &&
+        item.kind === 'embedding' &&
+        item.provider_id === providerId,
+    )
     .map((item) => ({
       label: modelLabel(item),
       value: item.model_id,
@@ -157,14 +187,130 @@ async function loadProviderOptions() {
     }));
 }
 
+async function loadOnnxOptions() {
+  try {
+    const catalog = await getAIOnnxOptionsApi();
+    onnxModels.value = catalog.embedding;
+    onnxCacheDir.value = catalog.cache_dir;
+  } catch (error) {
+    onnxModels.value = [...DEFAULT_EMBEDDING_ONNX_MODELS];
+    onnxCacheDir.value = '';
+    console.error(error);
+  }
+}
+
+function stopOnnxDownloadPolling() {
+  onnxDownloadSession += 1;
+  clearTimeout(onnxDownloadTimer);
+  onnxDownloadTimer = undefined;
+  downloadingModel.value = '';
+}
+
+async function handleOnnxDownloadStatus(
+  status: AIOnnxDownloadStatus,
+  session: number,
+  notify: boolean,
+) {
+  if (session !== onnxDownloadSession) {
+    return;
+  }
+  downloadingModel.value =
+    status.status === 'downloading' ? status.model_id : '';
+  if (status.status === 'downloading') {
+    onnxDownloadTimer = setTimeout(() => {
+      void pollOnnxDownload(session, true);
+    }, 1000);
+  } else if (status.status === 'done' && notify) {
+    await loadOnnxOptions();
+    if (session === onnxDownloadSession) {
+      message.success($t('ai-buddy.knowledgeManage.onnxDownloadComplete'));
+    }
+  } else if (status.status === 'failed' && notify) {
+    message.error(
+      status.error || $t('ai-buddy.knowledgeManage.onnxDownloadFailed'),
+    );
+  }
+}
+
+async function pollOnnxDownload(session: number, notify: boolean) {
+  try {
+    const status = await getAIOnnxDownloadStatusApi();
+    await handleOnnxDownloadStatus(status, session, notify);
+  } catch (error) {
+    if (session === onnxDownloadSession) {
+      downloadingModel.value = '';
+      console.error(error);
+    }
+  }
+}
+
+function downloadOnnxModel(item: AIOnnxOption) {
+  if (item.downloaded || downloadingModel.value) {
+    return;
+  }
+  const session = onnxDownloadSession;
+  AntModal.confirm({
+    title: $t('ai-buddy.knowledgeManage.onnxDownloadTitle'),
+    content: `${item.name} · ${formatOnnxSize(item.size_gb)}`,
+    okText: $t('ai-buddy.knowledgeManage.onnxDownload'),
+    cancelText: $t('common.cancel'),
+    onOk: async () => {
+      const values = await formApi.getValues<AIKnowledgeBaseFormValues>();
+      if (
+        session !== onnxDownloadSession ||
+        values.embedding_mode !== 'local' ||
+        downloadingModel.value
+      ) {
+        return;
+      }
+      stopOnnxDownloadPolling();
+      const downloadSession = onnxDownloadSession;
+      downloadingModel.value = item.id;
+      await formApi.setFieldValue('local_model_id', item.id);
+      try {
+        const status = await downloadAIOnnxModelApi(item.id);
+        await handleOnnxDownloadStatus(status, downloadSession, true);
+      } catch (error) {
+        if (downloadSession === onnxDownloadSession) {
+          downloadingModel.value = '';
+          console.error(error);
+        }
+      }
+    },
+  });
+}
+
+provide(ONNX_PICKER_KEY, {
+  cacheDir: onnxCacheDir,
+  download: downloadOnnxModel,
+  downloading: downloadingModel,
+  models: onnxModels,
+});
+
+onBeforeUnmount(stopOnnxDownloadPolling);
+
 function applyKnowledgeSchema() {
   formApi.setState({
     schema: createKnowledgeBaseSchema(
       providerOptions.value,
       modelOptions.value,
       async (nextProviderId) => {
-        formApi.setFieldValue('model_id', undefined);
-        await loadEmbeddingModels(nextProviderId);
+        await formApi.setValues(
+          resetKnowledgeEmbeddingBinding('remote', nextProviderId),
+        );
+        const request = loadEmbeddingModels(nextProviderId);
+        applyKnowledgeSchema();
+        try {
+          await request;
+        } catch (error) {
+          console.error(error);
+        } finally {
+          applyKnowledgeSchema();
+        }
+      },
+      async (mode) => {
+        await formApi.setValues(resetKnowledgeEmbeddingBinding(mode));
+        await loadEmbeddingModels();
         applyKnowledgeSchema();
       },
     ),
@@ -187,13 +333,20 @@ const [Modal, modalApi] = useVbenModal({
 
     modalApi.lock();
     try {
-      const values = await formApi.getValues<AIKnowledgeBaseParams>();
-      const data: AIKnowledgeBaseParams = {
-        name: values.name.trim(),
-        description: values.description?.trim() || null,
-        provider_id: values.provider_id || null,
-        model_id: values.model_id?.trim() || null,
-      };
+      const values = await formApi.getValues<AIKnowledgeBaseFormValues>();
+      if (values.embedding_mode === 'local') {
+        await loadOnnxOptions();
+      }
+      const issue = getKnowledgeEmbeddingIssue(values, {
+        localModels: onnxModels.value,
+        modelIds: modelOptions.value.map((item) => item.value),
+        providerIds: providerOptions.value.map((item) => item.value),
+      });
+      if (issue) {
+        message.warning($t(`ai-buddy.knowledgeManage.${issue}`));
+        return;
+      }
+      const data = createAIKnowledgeBasePayload(values);
       await (formData.value?.id
         ? updateAIKnowledgeBaseApi(formData.value.id, data)
         : createAIKnowledgeBaseApi(data));
@@ -205,24 +358,34 @@ const [Modal, modalApi] = useVbenModal({
     }
   },
   async onOpenChange(isOpen) {
+    stopOnnxDownloadPolling();
     if (!isOpen) {
+      embeddingModelRequest += 1;
       return;
     }
     const data = modalApi.getData<AIKnowledgeBaseResult>();
-    formApi.resetForm();
-    await loadProviderOptions();
-    await loadEmbeddingModels(data?.provider_id ?? undefined);
-    applyKnowledgeSchema();
-    if (data) {
-      formData.value = data;
-      formApi.setValues({
-        name: data.name,
-        description: data.description ?? '',
-        provider_id: data.provider_id ?? undefined,
-        model_id: data.model_id ?? undefined,
-      });
-    } else {
-      formData.value = undefined;
+    formData.value = data ?? undefined;
+    providerOptions.value = [];
+    modalApi.lock();
+    try {
+      await formApi.resetForm();
+      await formApi.setValues(toAIKnowledgeBaseFormValues(data ?? undefined));
+      const results = await Promise.allSettled([
+        loadProviderOptions(),
+        loadEmbeddingModels(data?.provider_id ?? undefined),
+        loadOnnxOptions(),
+        pollOnnxDownload(onnxDownloadSession, false),
+      ]);
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.error(result.reason);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      applyKnowledgeSchema();
+      modalApi.unlock();
     }
   },
 });
@@ -364,7 +527,16 @@ function onDeleteDocument(row: AIKnowledgeDocumentResult) {
       </template>
     </Grid>
     <Modal content-class="px-4 py-4 md:px-5 md:py-5" :title="modalTitle">
-      <Form />
+      <Form>
+        <template #local_model_id="slotProps">
+          <OnnxModelPicker
+            source="embedding"
+            :value="slotProps.value"
+            :disabled="slotProps.disabled"
+            @update:value="(id) => formApi.setFieldValue('local_model_id', id)"
+          />
+        </template>
+      </Form>
     </Modal>
     <Drawer>
       <div class="box-border flex h-full min-h-0 flex-col gap-4 p-5">

@@ -352,7 +352,6 @@ export function createModelSchema(options?: {
         },
         triggerFields: ['kind'],
       },
-      description: '选择时需包含文本；清空后使用模型类型默认输入模态',
       fieldName: 'input_modalities',
       label: '输入模态',
     },

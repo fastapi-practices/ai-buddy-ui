@@ -7,7 +7,7 @@ import { VbenButton } from '@vben/common-ui';
 import { MaterialSymbolsEdit } from '@vben/icons';
 import { $t } from '@vben/locales';
 
-import { Modal, message } from 'antdv-next';
+import { message, Modal } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 
@@ -23,13 +23,13 @@ import {
   updateAIConfigApi,
 } from '../../api';
 import {
-  AI_EMBEDDING_BACKEND,
-  AI_OCR_BACKEND,
-  AI_ONNX_EMBEDDING_MODEL,
-  AI_PADDLEOCR_API_URL,
-  AI_RAG_CHUNK_CHARS,
-  AI_RAG_CHUNK_OVERLAP,
-  AI_RAG_TOP_K,
+  AI_BUDDY_EMBEDDING_BACKEND,
+  AI_BUDDY_OCR_BACKEND,
+  AI_BUDDY_ONNX_EMBEDDING_MODEL,
+  AI_BUDDY_PADDLEOCR_API_URL,
+  AI_BUDDY_RAG_CHUNK_CHARS,
+  AI_BUDDY_RAG_CHUNK_OVERLAP,
+  AI_BUDDY_RAG_TOP_K,
   pickRagConfigs,
 } from './config-keys';
 import { ragSchema } from './data';
@@ -46,10 +46,12 @@ import {
 } from './onnx-picker-context';
 import { formatOnnxSize } from './onnx-size';
 
+defineProps<{ isMobile?: boolean }>();
+
 const numericKeys = new Set([
-  AI_RAG_CHUNK_CHARS,
-  AI_RAG_CHUNK_OVERLAP,
-  AI_RAG_TOP_K,
+  AI_BUDDY_RAG_CHUNK_CHARS,
+  AI_BUDDY_RAG_CHUNK_OVERLAP,
+  AI_BUDDY_RAG_TOP_K,
 ]);
 
 const [Form, formApi] = useVbenForm({
@@ -108,7 +110,7 @@ const fetchConfigList = async () => {
           : config.value;
         return;
       }
-      if (config.key === AI_OCR_BACKEND && config.value === 'off') {
+      if (config.key === AI_BUDDY_OCR_BACKEND && config.value === 'off') {
         values[config.key] = 'system';
         return;
       }
@@ -129,16 +131,16 @@ const saveRagConfig = async () => {
   }
 
   const data: Record<string, any> = await formApi.getValues();
-  if (data[AI_EMBEDDING_BACKEND] === 'onnx') {
+  if (data[AI_BUDDY_EMBEDDING_BACKEND] === 'onnx') {
     const selected = onnxModels.value.find(
-      (item) => item.id === data[AI_ONNX_EMBEDDING_MODEL],
+      (item) => item.id === data[AI_BUDDY_ONNX_EMBEDDING_MODEL],
     );
     if (!selected?.downloaded) {
       message.warning('所选模型尚未下载，请先下载后再保存');
       return;
     }
   }
-  if (data[AI_OCR_BACKEND] === 'onnx') {
+  if (data[AI_BUDDY_OCR_BACKEND] === 'onnx') {
     const selected = ocrOnnxModels.value.find((item) => item.id === 'rapidocr');
     if (!selected?.downloaded) {
       message.warning('RapidOCR 模型尚未下载，请先下载后再保存');
@@ -146,8 +148,8 @@ const saveRagConfig = async () => {
     }
   }
   if (
-    data[AI_OCR_BACKEND] === 'paddleocr' &&
-    !String(data[AI_PADDLEOCR_API_URL] || '').trim()
+    data[AI_BUDDY_OCR_BACKEND] === 'paddleocr' &&
+    !String(data[AI_BUDDY_PADDLEOCR_API_URL] || '').trim()
   ) {
     const selected = paddleocrModels.value.find(
       (item) => item.id === 'paddleocr',
@@ -312,7 +314,7 @@ function downloadOnnxModel(item: AIOnnxOption) {
     cancelText: $t('common.cancel'),
     onOk: async () => {
       downloadingModel.value = item.id;
-      await formApi.setValues({ [AI_ONNX_EMBEDDING_MODEL]: item.id });
+      await formApi.setValues({ [AI_BUDDY_ONNX_EMBEDDING_MODEL]: item.id });
       try {
         await downloadAIOnnxModelApi(item.id);
         await pollOnnxDownload(item.id);
@@ -357,8 +359,8 @@ defineExpose({
 <template>
   <a-spin :spinning="loading">
     <div>
-      <Form>
-        <template #AI_ONNX_EMBEDDING_MODEL="slotProps">
+      <Form :layout="isMobile ? 'vertical' : 'horizontal'">
+        <template #AI_BUDDY_ONNX_EMBEDDING_MODEL="slotProps">
           <div class="w-full">
             <OnnxModelPicker
               source="embedding"

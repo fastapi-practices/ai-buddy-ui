@@ -52,7 +52,7 @@ function pickerKey() {
   return ONNX_PICKER_KEY;
 }
 
-const ctx = inject<OnnxPickerContext | null>(pickerKey(), null);
+const ctx = inject<null | OnnxPickerContext>(pickerKey(), null);
 const models = computed(() =>
   props.models?.length ? props.models : (ctx?.models.value ?? []),
 );
