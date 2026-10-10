@@ -38,6 +38,7 @@ import {
   DEFAULT_OCR_ONNX_MODELS,
   DEFAULT_PADDLEOCR_MODELS,
 } from './onnx-catalog';
+import OnnxModelDrawer from './onnx-model-drawer.vue';
 import OnnxModelPicker from './onnx-model-picker.vue';
 import {
   OCR_ONNX_PICKER_KEY,
@@ -306,24 +307,19 @@ function downloadOcrOnnxModel(item: AIOnnxOption) {
   });
 }
 
-function downloadOnnxModel(item: AIOnnxOption) {
-  Modal.confirm({
-    title: '下载 ONNX 向量模型',
-    content: `${item.name} · ${formatOnnxSize(item.size_gb)}`,
-    okText: '下载',
-    cancelText: $t('common.cancel'),
-    onOk: async () => {
-      downloadingModel.value = item.id;
-      await formApi.setValues({ [AI_BUDDY_ONNX_EMBEDDING_MODEL]: item.id });
-      try {
-        await downloadAIOnnxModelApi(item.id);
-        await pollOnnxDownload(item.id);
-      } catch (error) {
-        downloadingModel.value = '';
-        console.error(error);
-      }
-    },
-  });
+async function downloadOnnxModel(item: AIOnnxOption) {
+  if (editButtonShow.value || downloadingModel.value || item.downloaded) {
+    return;
+  }
+  downloadingModel.value = item.id;
+  try {
+    await formApi.setValues({ [AI_BUDDY_ONNX_EMBEDDING_MODEL]: item.id });
+    await downloadAIOnnxModelApi(item.id);
+    await pollOnnxDownload(item.id);
+  } catch (error) {
+    downloadingModel.value = '';
+    console.error(error);
+  }
 }
 
 function bindPickerValue(slotProps: Record<string, any>, modelId: string) {
@@ -362,8 +358,7 @@ defineExpose({
       <Form :layout="isMobile ? 'vertical' : 'horizontal'">
         <template #AI_BUDDY_ONNX_EMBEDDING_MODEL="slotProps">
           <div class="w-full">
-            <OnnxModelPicker
-              source="embedding"
+            <OnnxModelDrawer
               :value="slotProps.value"
               :disabled="slotProps.disabled"
               :models="onnxModels"
