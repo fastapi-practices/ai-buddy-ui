@@ -135,6 +135,9 @@ export function createAssistantSchema(
   return [
     {
       component: 'Input',
+      componentProps: {
+        maxlength: 64,
+      },
       fieldName: 'name',
       label: $t('ai-buddy.assistantManage.name'),
       rules: 'required',
@@ -147,6 +150,9 @@ export function createAssistantSchema(
     },
     {
       component: 'Textarea',
+      componentProps: {
+        maxlength: 512,
+      },
       fieldName: 'description',
       label: $t('ai-buddy.assistantManage.description'),
     },

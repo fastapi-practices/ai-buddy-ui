@@ -86,12 +86,18 @@ export function createKnowledgeBaseSchema(
   return [
     {
       component: 'Input',
+      componentProps: {
+        maxlength: 128,
+      },
       fieldName: 'name',
       label: $t('ai-buddy.knowledgeManage.name'),
       rules: 'required',
     },
     {
       component: 'Textarea',
+      componentProps: {
+        maxlength: 512,
+      },
       fieldName: 'description',
       label: $t('ai-buddy.knowledgeManage.description'),
     },

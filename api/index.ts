@@ -17,7 +17,7 @@ export type AIModelKind = 'chat' | 'embedding' | 'image';
 export type AIDefaultModelKind = AIModelKind;
 export type AIModelCapability = 'thinking' | 'tools';
 export type AIModelModality = 'audio' | 'image' | 'text' | 'video';
-export type AIThinkingLevel = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type AIThinkingLevel = 'high' | 'low' | 'medium' | 'minimal' | 'xhigh';
 export interface AIThinkingPolicy {
   levels: AIThinkingLevel[];
   default_level: AIThinkingLevel | null;
@@ -102,16 +102,13 @@ export interface AIAllModelQueryParams {
   capability?: AIModelCapability;
 }
 
-export interface AIModelArchitectureSuggestion {
-  source: string;
-  last_updated: null | string;
-  kind: AIModelKind | null;
-  input_modalities: AIModelModality[] | null;
-  tools: boolean | null;
-  thinking: boolean | null;
-  thinking_policy: AIThinkingPolicy | null;
-  context_window: number | null;
-  max_output_tokens: number | null;
+export interface AIModelArchitectureSyncResult {
+  updated_count: number;
+  skipped: {
+    id: number;
+    model_id: string;
+    reason: string;
+  }[];
 }
 
 export interface AIModelParams {
@@ -463,9 +460,11 @@ export async function getAIModelDetailApi(pk: number) {
   return requestClient.get<AIModelResult>(`/api/v1/models/${pk}`);
 }
 
-export async function getAIModelArchitectureApi(pk: number) {
-  return requestClient.get<AIModelArchitectureSuggestion>(
-    `/api/v1/models/${pk}/architecture`,
+export async function syncAIModelsArchitectureApi() {
+  return requestClient.post<AIModelArchitectureSyncResult>(
+    '/api/v1/models/architecture/sync',
+    undefined,
+    { timeout: 60_000 },
   );
 }
 

@@ -13,13 +13,13 @@ import { $t } from '@vben/locales';
 
 import { DictEnum, getDictOptions } from '#/utils/dict';
 
+import { MODEL_MODALITY_OPTIONS } from './model-modalities';
 import {
   allowedModelModalities,
   normalizeModelModalities,
   supportsModelKind,
   THINKING_LEVEL_OPTIONS,
 } from './model-params';
-import { MODEL_MODALITY_OPTIONS } from './model-modalities';
 import {
   AI_PROVIDER_TYPE,
   getProviderDefaultHost,
@@ -184,13 +184,13 @@ export function useModelColumns(
       title: $t('common.table.operation'),
       align: 'center',
       fixed: 'right',
-      width: 165,
+      width: 100,
       cellRender: {
         attrs: {
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: [{ code: 'architecture', text: '同步架构' }, 'edit'],
+        options: ['edit'],
       },
     },
   ];

@@ -41,14 +41,11 @@ import {
   batchCreateAIModelApi,
   createAIModelApi,
   deleteAIModelApi,
-  getAIModelArchitectureApi,
-  getAIModelDetailApi,
   getAIModelListApi,
   getAIProviderModelsApi,
   getAllAIModelApi,
   updateAIModelApi,
 } from '../../../api';
-import { syncArchitecturePayload } from '../architecture';
 import {
   createModelSchema,
   getModelCapabilityColor,
@@ -156,7 +153,6 @@ const gridOptions: VxeTableGridOptions<AIModelResult> = {
 };
 
 const checkedRows = ref<number[]>([]);
-const architectureLoading = ref(false);
 const deleteLoading = ref(false);
 const deleteDisable = computed(() => checkedRows.value.length === 0);
 
@@ -260,10 +256,6 @@ function handleBatchDelete() {
 
 function onActionClick({ code, row }: OnActionClickParams<AIModelResult>) {
   switch (code) {
-    case 'architecture': {
-      void syncArchitecture(row);
-      break;
-    }
     case 'edit': {
       modalApi.setData(row).open();
       break;
@@ -273,34 +265,6 @@ function onActionClick({ code, row }: OnActionClickParams<AIModelResult>) {
 
 function isExistingModel(modelId: string) {
   return existingModelIdSet.value.has(modelId);
-}
-
-async function syncArchitecture(row: AIModelResult) {
-  if (architectureLoading.value) return;
-  architectureLoading.value = true;
-  try {
-    const [model, suggestion] = await Promise.all([
-      getAIModelDetailApi(row.id),
-      getAIModelArchitectureApi(row.id),
-    ]);
-    const payload = syncArchitecturePayload(model, suggestion);
-    if (!payload) {
-      message.info('模型架构已是最新');
-      return;
-    }
-    const modalityError = validateModelModalities(payload);
-    if (modalityError) {
-      message.warning(modalityError);
-      return;
-    }
-    await updateAIModelApi(row.id, payload);
-    message.success('模型架构已更新');
-    onRefresh();
-  } catch (error) {
-    message.error((error as Error).message || '同步模型架构失败');
-  } finally {
-    architectureLoading.value = false;
-  }
 }
 
 function resetBatchAddState() {
@@ -471,6 +435,7 @@ const [Modal, modalApi] = useVbenModal({
     }
   },
 });
+defineExpose({ refresh: onRefresh });
 </script>
 
 <template>

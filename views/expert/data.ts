@@ -85,12 +85,18 @@ export function createExpertSchema(
   return [
     {
       component: 'Input',
+      componentProps: {
+        maxlength: 64,
+      },
       fieldName: 'name',
       label: $t('ai-buddy.expertManage.name'),
       rules: 'required',
     },
     {
       component: 'Textarea',
+      componentProps: {
+        maxlength: 512,
+      },
       fieldName: 'description',
       label: $t('ai-buddy.expertManage.description'),
     },

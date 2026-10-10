@@ -55,6 +55,8 @@ describe('pickEditableAIConfigs', () => {
     expect([...AI_DYNAMIC_CONFIG_KEYS]).toEqual([
       'AI_BUDDY_EXA_API_KEY',
       'AI_BUDDY_TAVILY_API_KEY',
+      'AI_BUDDY_EMBEDDING_BACKEND',
+      'AI_BUDDY_ONNX_EMBEDDING_MODEL',
       'AI_BUDDY_RAG_CHUNK_CHARS',
       'AI_BUDDY_RAG_CHUNK_OVERLAP',
       'AI_BUDDY_RAG_TOP_K',
@@ -88,6 +90,8 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_AGENT_EXECUTION_BACKEND',
       'AI_BUDDY_EXA_API_KEY',
       'AI_BUDDY_TAVILY_API_KEY',
+      'AI_BUDDY_EMBEDDING_BACKEND',
+      'AI_BUDDY_ONNX_EMBEDDING_MODEL',
       'AI_BUDDY_RAG_CHUNK_CHARS',
       'AI_BUDDY_RAG_CHUNK_OVERLAP',
       'AI_BUDDY_RAG_TOP_K',
@@ -120,6 +124,8 @@ describe('pickEditableAIConfigs', () => {
       pickSearchEngineConfigs(allConfigRows).map((item) => item.key),
     ).toEqual(['AI_BUDDY_EXA_API_KEY', 'AI_BUDDY_TAVILY_API_KEY']);
     expect(pickRagConfigs(allConfigRows).map((item) => item.key)).toEqual([
+      'AI_BUDDY_EMBEDDING_BACKEND',
+      'AI_BUDDY_ONNX_EMBEDDING_MODEL',
       'AI_BUDDY_RAG_CHUNK_CHARS',
       'AI_BUDDY_RAG_CHUNK_OVERLAP',
       'AI_BUDDY_RAG_TOP_K',
@@ -168,8 +174,8 @@ describe('pickEditableAIConfigs', () => {
     expect(isEditableAIConfigKey('AI_BUDDY_DOCUMENT_EXTRACT_BACKEND')).toBe(
       true,
     );
-    expect(isEditableAIConfigKey('AI_BUDDY_EMBEDDING_BACKEND')).toBe(false);
-    expect(isEditableAIConfigKey('AI_BUDDY_ONNX_EMBEDDING_MODEL')).toBe(false);
+    expect(isEditableAIConfigKey('AI_BUDDY_EMBEDDING_BACKEND')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_ONNX_EMBEDDING_MODEL')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_OCR_BACKEND')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_UNSTRUCTURED_API_KEY')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_MARKITDOWN_DOCINTEL_ENDPOINT')).toBe(

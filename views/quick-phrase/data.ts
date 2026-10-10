@@ -59,6 +59,9 @@ export function useQuickPhraseColumns(
 export const quickPhraseSchema: VbenFormSchema[] = [
   {
     component: 'Input',
+    componentProps: {
+      maxlength: 128,
+    },
     fieldName: 'title',
     label: '短语标题',
     rules: 'required',

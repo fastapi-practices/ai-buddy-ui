@@ -201,6 +201,9 @@ export function createMcpSchema(
     },
     {
       component: 'Input',
+      componentProps: {
+        maxlength: 64,
+      },
       fieldName: 'tool_prefix',
       label: '工具前缀',
     },

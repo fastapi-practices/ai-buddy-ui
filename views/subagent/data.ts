@@ -70,12 +70,18 @@ export function useSubagentColumns(
 export const subagentSchema: VbenFormSchema[] = [
   {
     component: 'Input',
+    componentProps: {
+      maxlength: 64,
+    },
     fieldName: 'name',
     label: $t('ai-buddy.subagentManage.name'),
     rules: 'required',
   },
   {
     component: 'Textarea',
+    componentProps: {
+      maxlength: 512,
+    },
     fieldName: 'description',
     label: $t('ai-buddy.subagentManage.description'),
     rules: 'required',
