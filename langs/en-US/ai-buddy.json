@@ -66,7 +66,7 @@
   },
   "model": "Providers & Models",
   "modelManage": {
-    "syncArchitecture": "Sync All Platform Model Architectures",
+    "syncArchitecture": "Sync Model Architectures",
     "architectureUpdated": "Updated architectures for {0} platform models",
     "architectureSkipped": "Updated {0} platform model architectures, skipped {1} models",
     "architectureFailed": "Failed to sync model architectures"

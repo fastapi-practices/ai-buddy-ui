@@ -66,7 +66,7 @@
   },
   "model": "供应商与模型",
   "modelManage": {
-    "syncArchitecture": "同步全部平台模型架构",
+    "syncArchitecture": "同步模型架构",
     "architectureUpdated": "已更新 {0} 个平台模型的架构",
     "architectureSkipped": "已更新 {0} 个平台模型的架构，跳过 {1} 个模型",
     "architectureFailed": "同步模型架构失败"
