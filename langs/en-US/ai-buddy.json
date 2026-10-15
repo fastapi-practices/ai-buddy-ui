@@ -30,7 +30,39 @@
   "mcpManage": {
     "imported": "Imported {0} MCP servers",
     "skipped": "Skipped duplicates: {0}",
-    "empty": "No MCP servers to import"
+    "empty": "No MCP servers to import",
+    "oauth": {
+      "action": "Configure OAuth",
+      "title": "MCP OAuth Configuration",
+      "enabled": "Enable OAuth",
+      "authorizationUrl": "Authorization Endpoint",
+      "tokenUrl": "Token Endpoint",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "scope": "Scope",
+      "authMethod": "Authentication Method",
+      "redirectUri": "Callback URL",
+      "copyRedirectUri": "Copy Callback URL",
+      "copied": "Callback URL copied",
+      "copyFailed": "Copy failed. Copy the callback URL manually",
+      "redirectMissing": "Callback URL is not configured. Authorization is unavailable",
+      "secretNotConfigured": "Secret Not Set",
+      "secretKeepPlaceholder": "Secret set, leave blank to keep",
+      "publicClient": "Public Client (No Secret)",
+      "secretBasic": "HTTP Basic Authentication",
+      "secretPost": "Request Body Authentication",
+      "unavailable": "Only superusers can configure OAuth for built-in remote MCP servers using HTTPS",
+      "retry": "Reload",
+      "loadFailed": "Failed to load configuration. Please retry",
+      "validation": {
+        "authorization_url": "Enter a valid public HTTPS authorization endpoint without credentials or fragments, up to 2048 characters",
+        "token_url": "Enter a valid public HTTPS token endpoint without credentials or fragments, up to 2048 characters",
+        "client_id": "Enter a client ID, up to 512 characters",
+        "client_secret": "This authentication method requires a client secret, up to 8192 characters",
+        "scope": "Scope must be at most 2048 characters",
+        "token_endpoint_auth_method": "Select a valid authentication method"
+      }
+    }
   },
   "model": "Providers & Models",
   "modelManage": {

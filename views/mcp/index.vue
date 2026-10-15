@@ -33,11 +33,13 @@ import {
   queryMcpSchema,
   useMcpColumns,
 } from './data';
+import { canConfigureMcpOAuth } from './mcp-oauth-params';
 import {
   createAIMcpPayload,
   getDefaultMcpType,
   toAIMcpFormValues,
 } from './mcp-params';
+import OAuthConfigModal from './oauth-config-modal.vue';
 
 const userStore = useUserStore();
 const isSuperuser = computed(() =>
@@ -73,7 +75,7 @@ const gridOptions: VxeTableGridOptions<AIMcpResult> = {
     },
     zoom: true,
   },
-  columns: useMcpColumns(onActionClick),
+  columns: useMcpColumns(onActionClick, () => isSuperuser.value),
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues) => {
@@ -112,8 +114,19 @@ function onActionClick({ code, row }: OnActionClickParams<AIMcpResult>) {
       modalApi.setData(row).open();
       break;
     }
+    case 'oauth': {
+      if (canConfigureMcpOAuth(row, isSuperuser.value)) {
+        oauthModalApi.setData(row).open();
+      }
+      break;
+    }
   }
 }
+
+const [OAuthModal, oauthModalApi] = useVbenModal({
+  connectedComponent: OAuthConfigModal,
+  destroyOnClose: true,
+});
 
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
@@ -246,5 +259,6 @@ const [ImportModal, importModalApi] = useVbenModal({
     <ImportModal content-class="px-4 py-4 md:px-5 md:py-5" title="导入 MCP">
       <ImportForm />
     </ImportModal>
+    <OAuthModal />
   </Page>
 </template>

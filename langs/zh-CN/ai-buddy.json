@@ -30,7 +30,39 @@
   "mcpManage": {
     "imported": "已导入 {0} 个 MCP",
     "skipped": "已跳过重名：{0}",
-    "empty": "没有可导入的 MCP"
+    "empty": "没有可导入的 MCP",
+    "oauth": {
+      "action": "配置 OAuth",
+      "title": "MCP OAuth 配置",
+      "enabled": "启用 OAuth",
+      "authorizationUrl": "授权端点",
+      "tokenUrl": "令牌端点",
+      "clientId": "客户端 ID",
+      "clientSecret": "客户端密钥",
+      "scope": "授权范围",
+      "authMethod": "认证方式",
+      "redirectUri": "回调地址",
+      "copyRedirectUri": "复制回调地址",
+      "copied": "回调地址已复制",
+      "copyFailed": "复制失败，请手动复制回调地址",
+      "redirectMissing": "回调地址未配置，暂时无法授权",
+      "secretNotConfigured": "密钥未设置",
+      "secretKeepPlaceholder": "密钥已设置，留空保留",
+      "publicClient": "公共客户端（无需密钥）",
+      "secretBasic": "HTTP Basic 认证",
+      "secretPost": "请求体认证",
+      "unavailable": "仅超级管理员可为 HTTPS 远程内置 MCP 配置 OAuth",
+      "retry": "重新加载",
+      "loadFailed": "配置加载失败，请重试",
+      "validation": {
+        "authorization_url": "请输入有效的公网 HTTPS 授权端点，不含凭据或片段，最长 2048 字符",
+        "token_url": "请输入有效的公网 HTTPS 令牌端点，不含凭据或片段，最长 2048 字符",
+        "client_id": "请输入客户端 ID，最长 512 字符",
+        "client_secret": "此认证方式需配置客户端密钥，最长 8192 字符",
+        "scope": "授权范围最长 2048 字符",
+        "token_endpoint_auth_method": "请选择有效认证方式"
+      }
+    }
   },
   "model": "供应商与模型",
   "modelManage": {

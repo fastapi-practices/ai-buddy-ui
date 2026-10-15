@@ -6,6 +6,7 @@ import type { OnActionClickFn, VxeGridProps } from '#/adapter/vxe-table';
 import { $t } from '@vben/locales';
 
 import { ownerColumn } from '../owner';
+import { canConfigureMcpOAuth } from './mcp-oauth-params';
 import { getDefaultMcpType, MCP_STDIO_TYPE } from './mcp-params';
 
 export const MCP_TYPE_OPTIONS = [
@@ -50,6 +51,7 @@ export const queryMcpSchema: VbenFormSchema[] = [
 
 export function useMcpColumns(
   onActionClick?: OnActionClickFn<AIMcpResult>,
+  isSuperuser: () => boolean = () => false,
 ): VxeGridProps['columns'] {
   return [
     {
@@ -82,13 +84,22 @@ export function useMcpColumns(
       title: $t('common.table.operation'),
       align: 'center',
       fixed: 'right',
-      width: 140,
+      width: 240,
       cellRender: {
         attrs: {
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: ['edit', 'delete'],
+        options: [
+          'edit',
+          {
+            code: 'oauth',
+            show: (row: AIMcpResult) =>
+              canConfigureMcpOAuth(row, isSuperuser()),
+            text: $t('ai-buddy.mcpManage.oauth.action'),
+          },
+          'delete',
+        ],
       },
     },
   ];

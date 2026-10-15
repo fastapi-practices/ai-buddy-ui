@@ -13,6 +13,10 @@ export type AIActionResult = null | string;
 export type AIProviderType = 0 | 1 | 2 | 3 | 4 | 5;
 export type AIStatusType = 0 | 1;
 export type AIMcpType = 0 | 1 | 2;
+export type AIMcpOAuthAuthMethod =
+  | 'client_secret_basic'
+  | 'client_secret_post'
+  | 'none';
 export type AIModelKind = 'chat' | 'embedding' | 'image';
 export type AIDefaultModelKind = AIModelKind;
 export type AIModelCapability = 'thinking' | 'tools';
@@ -203,6 +207,28 @@ export interface AIMcpResult extends AIMcpParams {
   user_id: number;
   created_time: string;
   updated_time?: null | string;
+}
+
+export interface AIMcpOAuthConfigParams {
+  enabled?: boolean;
+  authorization_url: string;
+  token_url: string;
+  client_id: string;
+  client_secret?: null | string;
+  scope?: string;
+  token_endpoint_auth_method?: AIMcpOAuthAuthMethod;
+}
+
+export interface AIMcpOAuthConfigResult {
+  configured: boolean;
+  enabled: boolean;
+  redirect_uri: string;
+  authorization_url: null | string;
+  token_url: null | string;
+  client_id: null | string;
+  has_client_secret: boolean;
+  scope: string;
+  token_endpoint_auth_method: AIMcpOAuthAuthMethod;
 }
 
 export interface AIMcpImportParams {
@@ -578,6 +604,22 @@ export async function importAIMcpApi(data: AIMcpImportParams) {
 
 export async function updateAIMcpApi(pk: number, data: AIMcpParams) {
   return requestClient.put<AIActionResult>(`/api/v1/mcps/${pk}`, data);
+}
+
+export async function getAIMcpOAuthConfigApi(pk: number) {
+  return requestClient.get<AIMcpOAuthConfigResult>(
+    `/api/v1/mcps/${pk}/oauth/config`,
+  );
+}
+
+export async function updateAIMcpOAuthConfigApi(
+  pk: number,
+  data: AIMcpOAuthConfigParams,
+) {
+  return requestClient.put<AIActionResult>(
+    `/api/v1/mcps/${pk}/oauth/config`,
+    data,
+  );
 }
 
 export async function deleteAIMcpApi(pk: number) {
