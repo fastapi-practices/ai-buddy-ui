@@ -39,6 +39,7 @@ export const THINKING_LEVEL_OPTIONS: {
   { label: '中', value: 'medium' },
   { label: '高', value: 'high' },
   { label: '极高', value: 'xhigh' },
+  { label: '最高', value: 'max' },
 ];
 
 export function supportsModelKind(
@@ -48,16 +49,16 @@ export function supportsModelKind(
   if (kind === 'embedding') {
     return new Set<AIProviderType>([
       AI_PROVIDER_TYPE.openai,
-      AI_PROVIDER_TYPE.openrouter,
       AI_PROVIDER_TYPE.openai_responses,
+      AI_PROVIDER_TYPE.openrouter,
     ]).has(providerType);
   }
   if (kind === 'image') {
     return new Set<AIProviderType>([
-      AI_PROVIDER_TYPE.openai,
       AI_PROVIDER_TYPE.google,
-      AI_PROVIDER_TYPE.xai,
+      AI_PROVIDER_TYPE.openai,
       AI_PROVIDER_TYPE.openai_responses,
+      AI_PROVIDER_TYPE.xai,
     ]).has(providerType);
   }
   return true;
@@ -70,7 +71,7 @@ export function allowedModelModalities(kind: AIModelKind): AIModelModality[] {
   if (kind === 'image') {
     return ['text', 'image'];
   }
-  return ['text', 'image', 'audio', 'video'];
+  return ['text', 'image', 'audio', 'video', 'pdf'];
 }
 
 export function normalizeModelModalities(

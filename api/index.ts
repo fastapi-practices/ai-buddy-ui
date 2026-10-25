@@ -20,8 +20,14 @@ export type AIMcpOAuthAuthMethod =
 export type AIModelKind = 'chat' | 'embedding' | 'image';
 export type AIDefaultModelKind = AIModelKind;
 export type AIModelCapability = 'thinking' | 'tools';
-export type AIModelModality = 'audio' | 'image' | 'text' | 'video';
-export type AIThinkingLevel = 'high' | 'low' | 'medium' | 'minimal' | 'xhigh';
+export type AIModelModality = 'audio' | 'image' | 'pdf' | 'text' | 'video';
+export type AIThinkingLevel =
+  | 'high'
+  | 'low'
+  | 'max'
+  | 'medium'
+  | 'minimal'
+  | 'xhigh';
 export interface AIThinkingPolicy {
   levels: AIThinkingLevel[];
   default_level: AIThinkingLevel | null;

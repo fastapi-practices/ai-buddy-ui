@@ -10,6 +10,7 @@ export const MODEL_MODALITY_OPTIONS: {
   { color: 'green', icon: 'carbon:image', label: '图片', value: 'image' },
   { color: 'gold', icon: 'carbon:music', label: '音频', value: 'audio' },
   { color: 'magenta', icon: 'carbon:video', label: '视频', value: 'video' },
+  { color: 'red', icon: 'carbon:document-pdf', label: 'PDF', value: 'pdf' },
 ];
 
 export function getModelModalityLabel(modality: AIModelModality | string) {

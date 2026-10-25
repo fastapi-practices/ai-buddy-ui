@@ -30,7 +30,7 @@ describe('createAIBatchModelPayload', () => {
           id: 'reasoner',
           kind: 'chat',
           capabilities: ['thinking'],
-          input_modalities: ['text', 'image'],
+          input_modalities: ['text', 'image', 'pdf'],
           display_name: '  Reasoner  ',
         },
         {
@@ -53,7 +53,7 @@ describe('createAIBatchModelPayload', () => {
           name: 'Reasoner',
           kind: 'chat',
           capabilities: ['thinking'],
-          input_modalities: ['text', 'image'],
+          input_modalities: ['text', 'image', 'pdf'],
           context_window: null,
           max_output_tokens: null,
           remark: null,
@@ -125,6 +125,14 @@ describe('validateModelModalities', () => {
     ).toBeNull();
     expect(
       validateModelModalities({
+        kind: 'chat',
+        model_id: 'test',
+        input_modalities: ['text', 'pdf'],
+        status: 1,
+      }),
+    ).toBeNull();
+    expect(
+      validateModelModalities({
         kind: 'embedding',
         model_id: 'test',
         input_modalities: ['text', 'image'],
@@ -136,6 +144,14 @@ describe('validateModelModalities', () => {
         kind: 'image',
         model_id: 'test',
         input_modalities: ['text', 'audio'],
+        status: 1,
+      }),
+    ).toBe('当前模型类型不支持所选输入模态');
+    expect(
+      validateModelModalities({
+        kind: 'embedding',
+        model_id: 'test',
+        input_modalities: ['text', 'pdf'],
         status: 1,
       }),
     ).toBe('当前模型类型不支持所选输入模态');
@@ -247,6 +263,29 @@ describe('createAIModelPayload', () => {
         capabilities: ['tools'],
       }).thinking_policy,
     ).toBeNull();
+  });
+
+  it('preserves the max thinking level', () => {
+    const values = {
+      capabilities: ['thinking'] as const,
+      kind: 'chat' as const,
+      model_id: 'reasoner',
+      policy_default_level: 'max' as const,
+      policy_enabled: true,
+      policy_levels: ['high', 'max'] as const,
+      status: 1 as const,
+    };
+    const formValues = {
+      ...values,
+      capabilities: [...values.capabilities],
+      policy_levels: [...values.policy_levels],
+    };
+    expect(validateThinkingPolicy(formValues)).toBeNull();
+    expect(createAIModelPayload(7, formValues).thinking_policy).toEqual({
+      levels: ['high', 'max'],
+      default_level: 'max',
+      can_disable: false,
+    });
   });
 
   it('allows empty thinking levels but rejects unsupported defaults', () => {
