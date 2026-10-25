@@ -144,6 +144,13 @@ export function pickRuntimeConfigs<T extends { key: string }>(rows: T[]): T[] {
   return pickConfigsByKeys(rows, AI_RUNTIME_CONFIG_KEYS);
 }
 
+export function normalizeAIConfigValue(key: string, value: string): string {
+  if (key === AI_BUDDY_AGENT_EXECUTION_BACKEND && value === 'opensandbox') {
+    return 'sandbox';
+  }
+  return value;
+}
+
 export function pickJevConfigs<T extends { key: string }>(rows: T[]): T[] {
   return pickConfigsByKeys(rows, AI_JEV_CONFIG_KEYS);
 }

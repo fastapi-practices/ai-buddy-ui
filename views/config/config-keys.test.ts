@@ -3,12 +3,25 @@ import { describe, expect, it } from 'vitest';
 import {
   AI_DYNAMIC_CONFIG_KEYS,
   isEditableAIConfigKey,
+  normalizeAIConfigValue,
   pickEditableAIConfigs,
   pickJevConfigs,
   pickRagConfigs,
   pickRuntimeConfigs,
   pickSearchEngineConfigs,
 } from './config-keys';
+
+describe('normalizeAIConfigValue', () => {
+  it('maps the legacy opensandbox execution backend to sandbox', () => {
+    expect(
+      normalizeAIConfigValue('AI_BUDDY_AGENT_EXECUTION_BACKEND', 'opensandbox'),
+    ).toBe('sandbox');
+    expect(
+      normalizeAIConfigValue('AI_BUDDY_AGENT_EXECUTION_BACKEND', 'local'),
+    ).toBe('local');
+    expect(normalizeAIConfigValue('AI_BUDDY_HTTP_MAX_RETRIES', '5')).toBe('5');
+  });
+});
 
 const allConfigRows = [
   { key: 'AI_BUDDY_CONFIG_STATUS', value: '1' },

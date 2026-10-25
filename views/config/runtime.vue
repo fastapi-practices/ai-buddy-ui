@@ -12,7 +12,7 @@ import { message } from 'antdv-next';
 import { useVbenForm } from '#/adapter/form';
 
 import { getAllAIConfigApi, updateAIConfigApi } from '../../api';
-import { pickRuntimeConfigs } from './config-keys';
+import { normalizeAIConfigValue, pickRuntimeConfigs } from './config-keys';
 import { runtimeSchema } from './data';
 
 defineProps<{ isMobile?: boolean }>();
@@ -52,11 +52,10 @@ const fetchConfigList = async () => {
           }),
         };
       });
-      const numericValue = Number(config.value);
+      const value = normalizeAIConfigValue(config.key, config.value);
+      const numericValue = Number(value);
       formApi.setValues({
-        [config.key]: Number.isFinite(numericValue)
-          ? numericValue
-          : config.value,
+        [config.key]: Number.isFinite(numericValue) ? numericValue : value,
       });
     });
   } catch (error) {

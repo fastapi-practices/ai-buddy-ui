@@ -345,7 +345,7 @@ export const runtimeSchema: VbenFormSchema[] = [
       class: 'w-full',
       options: [
         { label: '本机（需连接桌面客户端）', value: 'local' },
-        { label: '远程 OpenSandbox', value: 'opensandbox' },
+        { label: '服务端沙箱', value: 'sandbox' },
       ],
     },
     defaultValue: 'local',
