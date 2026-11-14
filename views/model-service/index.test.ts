@@ -76,14 +76,25 @@ vi.mock('./components/model-pane.vue', () => ({
 }));
 vi.mock('./components/provider-pane.vue', () => ({
   default: defineComponent({
-    emits: ['providersChange', 'select'],
-    setup: (_, { emit }) => {
-      if (mocks.hasProvider) {
-        emit('providersChange', [{ id: 12, status: 0 }]);
-        emit('select', 12);
-      }
-      return () => h('div');
-    },
+    props: { syncArchitectureLoading: Boolean },
+    emits: ['providersChange', 'select', 'syncArchitecture'],
+    setup:
+      (props, { emit }) =>
+      () => {
+        if (mocks.hasProvider) {
+          emit('providersChange', [{ id: 12, status: 0 }]);
+          emit('select', 12);
+        }
+        return h(
+          'button',
+          {
+            disabled: props.syncArchitectureLoading,
+            'data-testid': 'sync-architecture',
+            onClick: () => emit('syncArchitecture'),
+          },
+          '同步模型架构',
+        );
+      },
   }),
 }));
 

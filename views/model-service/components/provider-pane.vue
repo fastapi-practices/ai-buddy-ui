@@ -9,6 +9,7 @@ import {
   MaterialSymbolsAdd,
   MaterialSymbolsDelete,
   MaterialSymbolsEdit,
+  RotateCw,
 } from '@vben/icons';
 import { $t } from '@vben/locales';
 
@@ -32,11 +33,13 @@ import { createAIProviderPayload } from '../provider-params';
 
 const props = defineProps<{
   activeProviderId?: number;
+  syncArchitectureLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
   providersChange: [providers: AIProviderResult[]];
   select: [providerId: number];
+  syncArchitecture: [];
 }>();
 
 const providers = ref<AIProviderResult[]>([]);
@@ -207,7 +210,17 @@ useInfiniteScroll(
       <div>
         <div class="text-sm font-medium text-foreground">供应商</div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex shrink-0 items-center gap-2">
+        <VbenButton
+          :disabled="syncArchitectureLoading"
+          :loading="syncArchitectureLoading"
+          size="sm"
+          variant="outline"
+          @click="emit('syncArchitecture')"
+        >
+          <RotateCw v-if="!syncArchitectureLoading" class="mr-1 size-3.5" />
+          {{ $t('ai-buddy.modelManage.syncArchitecture') }}
+        </VbenButton>
         <VbenButton size="sm" @click="() => modalApi.setData(null).open()">
           <MaterialSymbolsAdd class="size-4" />
           新增

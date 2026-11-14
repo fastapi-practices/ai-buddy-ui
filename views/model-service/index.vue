@@ -3,8 +3,7 @@ import type { AIProviderResult } from '../../api';
 
 import { computed, ref } from 'vue';
 
-import { ColPage, VbenButton } from '@vben/common-ui';
-import { RotateCw } from '@vben/icons';
+import { ColPage } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
 import { message } from 'antdv-next';
@@ -40,7 +39,7 @@ async function syncArchitecture() {
   architectureLoading.value = true;
   try {
     const result = await syncAIModelsArchitectureApi();
-    if (result.skipped.length) {
+    if (result.skipped.length > 0) {
       message.warning(
         $t('ai-buddy.modelManage.architectureSkipped', [
           result.updated_count,
@@ -67,28 +66,18 @@ async function syncArchitecture() {
   <ColPage
     auto-content-height
     content-class="h-full"
-    :left-width="20"
+    :left-width="24"
     :resizable="false"
-    :right-width="80"
+    :right-width="76"
   >
-    <template #title>{{ $t('ai-buddy.model') }}</template>
-    <template #extra>
-      <VbenButton
-        :disabled="architectureLoading"
-        :loading="architectureLoading"
-        variant="outline"
-        @click="syncArchitecture"
-      >
-        <RotateCw class="mr-1 size-4" />
-        {{ $t('ai-buddy.modelManage.syncArchitecture') }}
-      </VbenButton>
-    </template>
     <template #left>
       <div class="h-full">
         <ProviderPane
           :active-provider-id="activeProviderId"
+          :sync-architecture-loading="architectureLoading"
           @providers-change="handleProvidersChange"
           @select="handleProviderSelect"
+          @sync-architecture="syncArchitecture"
         />
       </div>
     </template>

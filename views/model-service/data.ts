@@ -169,11 +169,6 @@ export function useModelColumns(
       width: 100,
     },
     {
-      field: 'sort',
-      title: '排序',
-      width: 80,
-    },
-    {
       field: 'remark',
       title: $t('common.table.mark'),
       align: 'left',
