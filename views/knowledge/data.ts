@@ -160,6 +160,7 @@ export function createKnowledgeBaseSchema(
       component: OnnxModelPicker,
       componentProps: {
         class: 'w-full',
+        downloadable: false,
         source: 'embedding',
       },
       dependencies: {

@@ -3,7 +3,6 @@ import type {
   AIKnowledgeBaseResult,
   AIKnowledgeDocumentResult,
   AIModelResult,
-  AIOnnxDownloadStatus,
   AIOnnxOption,
   AIProviderResult,
 } from '../../api';
@@ -15,13 +14,13 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { computed, onBeforeUnmount, provide, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { Page, useVbenDrawer, useVbenModal, VbenButton } from '@vben/common-ui';
 import { IconifyIcon, MaterialSymbolsAdd } from '@vben/icons';
 import { $t } from '@vben/locales';
 
-import { Modal as AntModal, message } from 'antdv-next';
+import { message } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
@@ -31,9 +30,7 @@ import {
   createAIKnowledgeDocumentApi,
   deleteAIKnowledgeBaseApi,
   deleteAIKnowledgeDocumentApi,
-  downloadAIOnnxModelApi,
   getAIKnowledgeBaseListApi,
-  getAIOnnxDownloadStatusApi,
   getAIOnnxOptionsApi,
   getAllAIKnowledgeDocumentApi,
   getAllAIModelApi,
@@ -47,8 +44,6 @@ import {
 import UploadDropzone from '../components/upload-dropzone.vue';
 import { DEFAULT_EMBEDDING_ONNX_MODELS } from '../config/onnx-catalog';
 import OnnxModelPicker from '../config/onnx-model-picker.vue';
-import { ONNX_PICKER_KEY } from '../config/onnx-picker-context';
-import { formatOnnxSize } from '../config/onnx-size';
 import { getProviderTypeLabel } from '../model-service/data';
 import {
   createKnowledgeBaseSchema,
@@ -117,11 +112,7 @@ const formData = ref<AIKnowledgeBaseResult>();
 const providerOptions = ref<SelectOption[]>([]);
 const modelOptions = ref<SelectOption<string>[]>([]);
 const onnxModels = ref<AIOnnxOption[]>([...DEFAULT_EMBEDDING_ONNX_MODELS]);
-const onnxCacheDir = ref('');
-const downloadingModel = ref('');
 let embeddingModelRequest = 0;
-let onnxDownloadSession = 0;
-let onnxDownloadTimer: ReturnType<typeof setTimeout> | undefined;
 const currentBase = ref<AIKnowledgeBaseResult>();
 const documents = ref<AIKnowledgeDocumentResult[]>([]);
 const documentsLoading = ref(false);
@@ -154,7 +145,7 @@ function modelLabel(item: AIModelResult) {
 async function loadEmbeddingModels(providerId?: number) {
   const request = ++embeddingModelRequest;
   modelOptions.value = [];
-  if (providerId == null) {
+  if (!providerId) {
     return;
   }
   const models = await getAllAIModelApi({
@@ -191,103 +182,11 @@ async function loadOnnxOptions() {
   try {
     const catalog = await getAIOnnxOptionsApi();
     onnxModels.value = catalog.embedding;
-    onnxCacheDir.value = catalog.cache_dir;
   } catch (error) {
     onnxModels.value = [...DEFAULT_EMBEDDING_ONNX_MODELS];
-    onnxCacheDir.value = '';
     console.error(error);
   }
 }
-
-function stopOnnxDownloadPolling() {
-  onnxDownloadSession += 1;
-  clearTimeout(onnxDownloadTimer);
-  onnxDownloadTimer = undefined;
-  downloadingModel.value = '';
-}
-
-async function handleOnnxDownloadStatus(
-  status: AIOnnxDownloadStatus,
-  session: number,
-  notify: boolean,
-) {
-  if (session !== onnxDownloadSession) {
-    return;
-  }
-  downloadingModel.value =
-    status.status === 'downloading' ? status.model_id : '';
-  if (status.status === 'downloading') {
-    onnxDownloadTimer = setTimeout(() => {
-      void pollOnnxDownload(session, true);
-    }, 1000);
-  } else if (status.status === 'done' && notify) {
-    await loadOnnxOptions();
-    if (session === onnxDownloadSession) {
-      message.success($t('ai-buddy.knowledgeManage.onnxDownloadComplete'));
-    }
-  } else if (status.status === 'failed' && notify) {
-    message.error(
-      status.error || $t('ai-buddy.knowledgeManage.onnxDownloadFailed'),
-    );
-  }
-}
-
-async function pollOnnxDownload(session: number, notify: boolean) {
-  try {
-    const status = await getAIOnnxDownloadStatusApi();
-    await handleOnnxDownloadStatus(status, session, notify);
-  } catch (error) {
-    if (session === onnxDownloadSession) {
-      downloadingModel.value = '';
-      console.error(error);
-    }
-  }
-}
-
-function downloadOnnxModel(item: AIOnnxOption) {
-  if (item.downloaded || downloadingModel.value) {
-    return;
-  }
-  const session = onnxDownloadSession;
-  AntModal.confirm({
-    title: $t('ai-buddy.knowledgeManage.onnxDownloadTitle'),
-    content: `${item.name} · ${formatOnnxSize(item.size_gb)}`,
-    okText: $t('ai-buddy.knowledgeManage.onnxDownload'),
-    cancelText: $t('common.cancel'),
-    onOk: async () => {
-      const values = await formApi.getValues<AIKnowledgeBaseFormValues>();
-      if (
-        session !== onnxDownloadSession ||
-        values.embedding_mode !== 'local' ||
-        downloadingModel.value
-      ) {
-        return;
-      }
-      stopOnnxDownloadPolling();
-      const downloadSession = onnxDownloadSession;
-      downloadingModel.value = item.id;
-      await formApi.setFieldValue('local_model_id', item.id);
-      try {
-        const status = await downloadAIOnnxModelApi(item.id);
-        await handleOnnxDownloadStatus(status, downloadSession, true);
-      } catch (error) {
-        if (downloadSession === onnxDownloadSession) {
-          downloadingModel.value = '';
-          console.error(error);
-        }
-      }
-    },
-  });
-}
-
-provide(ONNX_PICKER_KEY, {
-  cacheDir: onnxCacheDir,
-  download: downloadOnnxModel,
-  downloading: downloadingModel,
-  models: onnxModels,
-});
-
-onBeforeUnmount(stopOnnxDownloadPolling);
 
 function applyKnowledgeSchema() {
   formApi.setState({
@@ -358,7 +257,6 @@ const [Modal, modalApi] = useVbenModal({
     }
   },
   async onOpenChange(isOpen) {
-    stopOnnxDownloadPolling();
     if (!isOpen) {
       embeddingModelRequest += 1;
       return;
@@ -374,7 +272,6 @@ const [Modal, modalApi] = useVbenModal({
         loadProviderOptions(),
         loadEmbeddingModels(data?.provider_id ?? undefined),
         loadOnnxOptions(),
-        pollOnnxDownload(onnxDownloadSession, false),
       ]);
       for (const result of results) {
         if (result.status === 'rejected') {
@@ -530,9 +427,11 @@ function onDeleteDocument(row: AIKnowledgeDocumentResult) {
       <Form>
         <template #local_model_id="slotProps">
           <OnnxModelPicker
+            :disabled="slotProps.disabled"
+            :downloadable="false"
+            :models="onnxModels"
             source="embedding"
             :value="slotProps.value"
-            :disabled="slotProps.disabled"
             @update:value="(id) => formApi.setFieldValue('local_model_id', id)"
           />
         </template>
