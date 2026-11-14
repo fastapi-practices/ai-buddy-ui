@@ -30,8 +30,12 @@ export function toAIKnowledgeBaseFormValues(
   row?: AIKnowledgeBaseParams,
 ): AIKnowledgeBaseFormValues {
   const modelId = row?.model_id?.trim() || undefined;
-  const mode =
-    row?.provider_id != null ? 'remote' : modelId ? 'local' : 'default';
+  let mode: KnowledgeEmbeddingMode = 'default';
+  if (typeof row?.provider_id === 'number') {
+    mode = 'remote';
+  } else if (modelId) {
+    mode = 'local';
+  }
   return {
     ...resetKnowledgeEmbeddingBinding(mode, row?.provider_id),
     name: row?.name ?? '',
@@ -44,17 +48,18 @@ export function toAIKnowledgeBaseFormValues(
 export function createAIKnowledgeBasePayload(
   values: AIKnowledgeBaseFormValues,
 ): AIKnowledgeBaseParams {
+  let modelId: null | string = null;
+  if (values.embedding_mode === 'local') {
+    modelId = values.local_model_id?.trim() || null;
+  } else if (values.embedding_mode === 'remote') {
+    modelId = values.model_id?.trim() || null;
+  }
   return {
     name: values.name.trim(),
     description: values.description?.trim() || null,
     provider_id:
       values.embedding_mode === 'remote' ? (values.provider_id ?? null) : null,
-    model_id:
-      values.embedding_mode === 'local'
-        ? values.local_model_id?.trim() || null
-        : values.embedding_mode === 'remote'
-          ? values.model_id?.trim() || null
-          : null,
+    model_id: modelId,
   };
 }
 
@@ -87,7 +92,11 @@ export function getKnowledgeEmbeddingIssue(
   }
   if (values.embedding_mode === 'remote') {
     const modelId = values.model_id?.trim();
-    if (values.provider_id == null || !modelId) {
+    if (
+      values.provider_id === null ||
+      values.provider_id === undefined ||
+      !modelId
+    ) {
       return 'remotePairRequired';
     }
     if (

@@ -54,11 +54,11 @@ function isMcpOAuthHttpsUrl(value: null | string | undefined): boolean {
       !hostname.endsWith('.home.arpa') &&
       hostname !== '[::1]' &&
       hostname !== '[::]' &&
-      !/^127\./.test(hostname) &&
-      !/^0\./.test(hostname) &&
-      !/^10\./.test(hostname) &&
-      !/^192\.168\./.test(hostname) &&
-      !/^169\.254\./.test(hostname) &&
+      !hostname.startsWith('127.') &&
+      !hostname.startsWith('0.') &&
+      !hostname.startsWith('10.') &&
+      !hostname.startsWith('192.168.') &&
+      !hostname.startsWith('169.254.') &&
       !/^172\.(?:1[6-9]|2\d|3[01])\./.test(hostname) &&
       !/^\[(?:f[cd]|fe[89ab])/.test(hostname)
     );

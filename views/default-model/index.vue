@@ -18,8 +18,8 @@ import { message } from 'antdv-next';
 
 import {
   getAIDefaultModelOptionalApi,
-  getAllAIModelApi,
   getAIModelOptionsApi,
+  getAllAIModelApi,
   getAllAIProviderApi,
   updateAIDefaultModelApi,
 } from '../../api';
