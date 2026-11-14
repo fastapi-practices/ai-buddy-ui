@@ -1,4 +1,4 @@
-export function formatOnnxSize(sizeGb: number | null | undefined): string {
+export function formatOnnxSize(sizeGb: null | number | undefined): string {
   if (sizeGb === null || sizeGb === undefined || Number.isNaN(Number(sizeGb))) {
     return '大小未知';
   }

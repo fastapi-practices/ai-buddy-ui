@@ -1,7 +1,14 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
 import {
+  AI_BUDDY_AGENT_DURABILITY_ENABLED,
+  AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED,
+  AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS,
+  AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS,
+  AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED,
+  AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX,
   AI_BUDDY_AGENT_EXECUTION_BACKEND,
+  AI_BUDDY_AGENT_FALLBACK_MODELS,
   AI_BUDDY_COMPACTION_KEEP_MESSAGES,
   AI_BUDDY_COMPACTION_MAX_MESSAGES,
   AI_BUDDY_DOC2X_API_KEY,
@@ -12,6 +19,13 @@ import {
   AI_BUDDY_HTTP_MAX_RETRIES,
   AI_BUDDY_JEV_INPUT_THRESHOLD,
   AI_BUDDY_JEV_MODEL,
+  AI_BUDDY_KEENABLE_API_KEY,
+  AI_BUDDY_KNOWLEDGE_MAX_FILES,
+  AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES,
+  AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS,
+  AI_BUDDY_KNOWLEDGE_MAX_IMAGES,
+  AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES,
+  AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES,
   AI_BUDDY_MARKITDOWN_DOCINTEL_API_KEY,
   AI_BUDDY_MARKITDOWN_DOCINTEL_ENDPOINT,
   AI_BUDDY_MCP_MAX_RETRIES,
@@ -19,6 +33,7 @@ import {
   AI_BUDDY_MISTRAL_API_KEY,
   AI_BUDDY_MISTRAL_API_URL,
   AI_BUDDY_OCR_BACKEND,
+  AI_BUDDY_OCR_TIMEOUT_SECONDS,
   AI_BUDDY_ONNX_EMBEDDING_MODEL,
   AI_BUDDY_OPEN_MINERU_API_KEY,
   AI_BUDDY_OPEN_MINERU_API_URL,
@@ -31,14 +46,13 @@ import {
   AI_BUDDY_UNSTRUCTURED_API_KEY,
   AI_BUDDY_UNSTRUCTURED_API_URL,
 } from './config-keys';
+import FallbackModelSelect from './fallback-model-select.vue';
 import OnnxModelPicker from './onnx-model-picker.vue';
 
-function isMistralBackend(values: Partial<Record<string, any>>): boolean {
-  return (
-    values[AI_BUDDY_DOCUMENT_EXTRACT_BACKEND] === 'mistral' ||
-    values[AI_BUDDY_OCR_BACKEND] === 'mistral'
-  );
-}
+const SWITCH_OPTIONS = [
+  { label: '开启', value: 'true' },
+  { label: '关闭', value: 'false' },
+];
 
 export const searchEngineSchema: VbenFormSchema[] = [
   {
@@ -53,6 +67,12 @@ export const searchEngineSchema: VbenFormSchema[] = [
     fieldName: AI_BUDDY_TAVILY_API_KEY,
     label: 'Tavily API Key',
   },
+  {
+    component: 'InputPassword',
+    description: '用于 Keenable 联网搜索。获取 https://keenable.ai',
+    fieldName: AI_BUDDY_KEENABLE_API_KEY,
+    label: 'Keenable API Key',
+  },
 ];
 
 export const ragStoreSchema: VbenFormSchema[] = [
@@ -64,6 +84,7 @@ export const ragStoreSchema: VbenFormSchema[] = [
       precision: 0,
     },
     defaultValue: 500,
+    description: '单个知识切片的最大字符数，过大容易超出向量模型的上下文长度',
     fieldName: AI_BUDDY_RAG_CHUNK_CHARS,
     label: '切片长度',
   },
@@ -75,6 +96,7 @@ export const ragStoreSchema: VbenFormSchema[] = [
       precision: 0,
     },
     defaultValue: 80,
+    description: '相邻切片的重复字符数，保留少量重叠可避免切断跨切片的语义',
     fieldName: AI_BUDDY_RAG_CHUNK_OVERLAP,
     label: '切片重叠',
   },
@@ -86,8 +108,97 @@ export const ragStoreSchema: VbenFormSchema[] = [
       precision: 0,
     },
     defaultValue: 6,
+    description:
+      '每次检索召回的知识片段数量，越大上下文越丰富但更慢、更耗 token',
     fieldName: AI_BUDDY_RAG_TOP_K,
     label: '检索条数',
+  },
+];
+
+export const ragLimitSchema: VbenFormSchema[] = [
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 200,
+    description: '单次知识导入允许的最大文件数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_FILES,
+    label: '知识文件数上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 104_857_600,
+    description: '单次知识导入允许的最大总字节数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES,
+    label: '知识总量上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 200,
+    description: '单个 PDF 文档允许解析的最大页数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES,
+    label: 'PDF 页数上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 200,
+    description: '单次知识导入允许解析的最大图片数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_IMAGES,
+    label: '知识图片数上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 20_971_520,
+    description: '单张知识图片允许的最大字节数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES,
+    label: '知识图片字节上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 40_000_000,
+    description: '单次知识导入允许解析的图片像素总数',
+    fieldName: AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS,
+    label: '知识图片像素上限',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 300,
+    description: '知识 OCR 识别的超时秒数',
+    fieldName: AI_BUDDY_OCR_TIMEOUT_SECONDS,
+    label: 'OCR 超时',
   },
 ];
 
@@ -245,15 +356,13 @@ export const ragOcrSchema: VbenFormSchema[] = [
     componentProps: {
       class: 'w-full',
       options: [
-        { label: '系统 OCR', value: 'system' },
-        { label: 'Tesseract', value: 'tesseract' },
         { label: 'PaddleOCR', value: 'paddleocr' },
         { label: '本地 ONNX', value: 'onnx' },
         { label: '默认对话模型（需识图能力）', value: 'vision' },
         { label: 'Mistral OCR', value: 'mistral' },
       ],
     },
-    defaultValue: 'system',
+    defaultValue: 'onnx',
     fieldName: AI_BUDDY_OCR_BACKEND,
     label: 'OCR 方式',
   },
@@ -307,6 +416,15 @@ export const ragOcrSchema: VbenFormSchema[] = [
   },
 ];
 
+// Mistral 同时用于文档解析和 OCR：解析方式在「文档解析」菜单，
+// 该菜单的取值通过菜单的 contextKeys 注入本表单，仅用于条件显示。
+function isMistralBackend(values: Partial<Record<string, any>>): boolean {
+  return (
+    values[AI_BUDDY_DOCUMENT_EXTRACT_BACKEND] === 'mistral' ||
+    values[AI_BUDDY_OCR_BACKEND] === 'mistral'
+  );
+}
+
 export const ragMistralSchema: VbenFormSchema[] = [
   {
     component: 'Input',
@@ -323,22 +441,28 @@ export const ragMistralSchema: VbenFormSchema[] = [
     component: 'InputPassword',
     dependencies: {
       show: isMistralBackend,
-      triggerFields: [AI_BUDDY_DOCUMENT_EXTRACT_BACKEND, AI_BUDDY_OCR_BACKEND],
+      triggerFields: [AI_BUDDY_DOCUMENT_EXTRACT_BACKEND],
     },
     fieldName: AI_BUDDY_MISTRAL_API_KEY,
     label: 'Mistral Key',
   },
 ];
 
-export const ragSchema: VbenFormSchema[] = [
+export const ragRetrievalSchema: VbenFormSchema[] = [
   ...ragEmbedSchema,
   ...ragStoreSchema,
-  ...ragExtractSchema,
+];
+
+export const documentExtractSchema: VbenFormSchema[] = [...ragExtractSchema];
+
+export const ocrSchema: VbenFormSchema[] = [
   ...ragOcrSchema,
   ...ragMistralSchema,
 ];
 
-export const runtimeSchema: VbenFormSchema[] = [
+export const knowledgeLimitSchema: VbenFormSchema[] = [...ragLimitSchema];
+
+export const runtimeBaseSchema: VbenFormSchema[] = [
   {
     component: 'Select',
     componentProps: {
@@ -398,6 +522,91 @@ export const runtimeSchema: VbenFormSchema[] = [
     description: '历史消息数超过此值时，尝试压缩较早的消息',
     fieldName: AI_BUDDY_COMPACTION_MAX_MESSAGES,
     label: '压缩触发阈值',
+  },
+];
+
+export const agentRecoverySchema: VbenFormSchema[] = [
+  {
+    component: 'Select',
+    componentProps: {
+      class: 'w-full',
+      options: SWITCH_OPTIONS,
+    },
+    defaultValue: 'false',
+    description: '开启后整轮生成写入持久化工作流，进程崩溃后可自动恢复',
+    fieldName: AI_BUDDY_AGENT_DURABILITY_ENABLED,
+    label: '容灾执行',
+  },
+  {
+    component: 'Select',
+    componentProps: {
+      class: 'w-full',
+      options: SWITCH_OPTIONS,
+    },
+    defaultValue: 'true',
+    description: '开启后周期巡检并恢复卡在等待状态的容灾工作流',
+    fieldName: AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED,
+    label: '容灾巡检',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 60,
+    description: '容灾巡检后台任务的扫描间隔秒数',
+    fieldName: AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS,
+    label: '容灾巡检间隔',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 60,
+    description: '助手消息静默多久判定为中断并触发恢复',
+    fieldName: AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS,
+    label: '容灾静默阈值',
+  },
+  {
+    component: FallbackModelSelect,
+    componentProps: {
+      class: 'w-full',
+    },
+    description: '模型不可用时按选择顺序依次重试的兜底模型',
+    fieldName: AI_BUDDY_AGENT_FALLBACK_MODELS,
+    label: '兜底模型',
+    modelPropName: 'value',
+  },
+];
+
+export const dynamicSubagentSchema: VbenFormSchema[] = [
+  {
+    component: 'Select',
+    componentProps: {
+      class: 'w-full',
+      options: SWITCH_OPTIONS,
+    },
+    defaultValue: 'true',
+    description: '开启后模型可在运行中动态创建子代理',
+    fieldName: AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED,
+    label: '动态子代理',
+  },
+  {
+    component: 'InputNumber',
+    componentProps: {
+      class: 'w-full',
+      min: 1,
+      precision: 0,
+    },
+    defaultValue: 3,
+    description: '单轮对话允许动态创建的子代理数量上限',
+    fieldName: AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX,
+    label: '动态子代理上限',
   },
 ];
 

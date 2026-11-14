@@ -12,6 +12,16 @@ import {
 } from './config-keys';
 
 describe('normalizeAIConfigValue', () => {
+  it('maps the legacy system OCR backend to onnx', () => {
+    expect(normalizeAIConfigValue('AI_BUDDY_OCR_BACKEND', 'system')).toBe(
+      'onnx',
+    );
+    expect(normalizeAIConfigValue('AI_BUDDY_OCR_BACKEND', 'off')).toBe('onnx');
+    expect(normalizeAIConfigValue('AI_BUDDY_OCR_BACKEND', 'paddleocr')).toBe(
+      'paddleocr',
+    );
+  });
+
   it('maps the legacy opensandbox execution backend to sandbox', () => {
     expect(
       normalizeAIConfigValue('AI_BUDDY_AGENT_EXECUTION_BACKEND', 'opensandbox'),
@@ -29,6 +39,7 @@ const allConfigRows = [
   { key: 'AI_EXA_API_KEY', value: 'legacy' },
   { key: 'AI_BUDDY_EXA_API_KEY', value: 'exa' },
   { key: 'AI_BUDDY_TAVILY_API_KEY', value: 'tvly' },
+  { key: 'AI_BUDDY_KEENABLE_API_KEY', value: '' },
   { key: 'AI_BUDDY_EMBEDDING_BACKEND', value: 'remote' },
   { key: 'AI_BUDDY_ONNX_EMBEDDING_MODEL', value: 'BAAI/bge-small-zh-v1.5' },
   { key: 'AI_BUDDY_RAG_CHUNK_CHARS', value: '500' },
@@ -46,8 +57,15 @@ const allConfigRows = [
   { key: 'AI_BUDDY_DOC2X_API_KEY', value: '' },
   { key: 'AI_BUDDY_MISTRAL_API_URL', value: '' },
   { key: 'AI_BUDDY_MISTRAL_API_KEY', value: '' },
-  { key: 'AI_BUDDY_OCR_BACKEND', value: 'off' },
+  { key: 'AI_BUDDY_OCR_BACKEND', value: 'system' },
   { key: 'AI_BUDDY_PADDLEOCR_API_URL', value: '' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_FILES', value: '200' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES', value: '104857600' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES', value: '200' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_IMAGES', value: '200' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES', value: '104857600' },
+  { key: 'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS', value: '40000000' },
+  { key: 'AI_BUDDY_OCR_TIMEOUT_SECONDS', value: '300' },
   { key: 'AI_BUDDY_ADVISOR_MODEL', value: 'gpt-test' },
   { key: 'AI_BUDDY_USAGE_REQUEST_LIMIT', value: '20' },
   { key: 'AI_BUDDY_USAGE_TOOL_CALLS_LIMIT', value: '40' },
@@ -58,6 +76,13 @@ const allConfigRows = [
   { key: 'AI_BUDDY_MCP_MAX_RETRIES', value: '1' },
   { key: 'AI_BUDDY_COMPACTION_KEEP_MESSAGES', value: '40' },
   { key: 'AI_BUDDY_COMPACTION_MAX_MESSAGES', value: '80' },
+  { key: 'AI_BUDDY_AGENT_DURABILITY_ENABLED', value: 'false' },
+  { key: 'AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED', value: 'true' },
+  { key: 'AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS', value: '60' },
+  { key: 'AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS', value: '60' },
+  { key: 'AI_BUDDY_AGENT_FALLBACK_MODELS', value: '' },
+  { key: 'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED', value: 'true' },
+  { key: 'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX', value: '3' },
   { key: 'AI_BUDDY_TYPESAFE_API_KEY', value: 'ts-key' },
   { key: 'AI_BUDDY_JEV_MODEL', value: 'jev-latest' },
   { key: 'AI_BUDDY_JEV_INPUT_THRESHOLD', value: '0.75' },
@@ -68,6 +93,7 @@ describe('pickEditableAIConfigs', () => {
     expect([...AI_DYNAMIC_CONFIG_KEYS]).toEqual([
       'AI_BUDDY_EXA_API_KEY',
       'AI_BUDDY_TAVILY_API_KEY',
+      'AI_BUDDY_KEENABLE_API_KEY',
       'AI_BUDDY_EMBEDDING_BACKEND',
       'AI_BUDDY_ONNX_EMBEDDING_MODEL',
       'AI_BUDDY_RAG_CHUNK_CHARS',
@@ -87,11 +113,25 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_MISTRAL_API_KEY',
       'AI_BUDDY_OCR_BACKEND',
       'AI_BUDDY_PADDLEOCR_API_URL',
+      'AI_BUDDY_KNOWLEDGE_MAX_FILES',
+      'AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS',
+      'AI_BUDDY_OCR_TIMEOUT_SECONDS',
       'AI_BUDDY_AGENT_EXECUTION_BACKEND',
       'AI_BUDDY_HTTP_MAX_RETRIES',
       'AI_BUDDY_MCP_MAX_RETRIES',
       'AI_BUDDY_COMPACTION_KEEP_MESSAGES',
       'AI_BUDDY_COMPACTION_MAX_MESSAGES',
+      'AI_BUDDY_AGENT_DURABILITY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS',
+      'AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS',
+      'AI_BUDDY_AGENT_FALLBACK_MODELS',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX',
       'AI_BUDDY_TYPESAFE_API_KEY',
       'AI_BUDDY_JEV_MODEL',
       'AI_BUDDY_JEV_INPUT_THRESHOLD',
@@ -103,6 +143,7 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_AGENT_EXECUTION_BACKEND',
       'AI_BUDDY_EXA_API_KEY',
       'AI_BUDDY_TAVILY_API_KEY',
+      'AI_BUDDY_KEENABLE_API_KEY',
       'AI_BUDDY_EMBEDDING_BACKEND',
       'AI_BUDDY_ONNX_EMBEDDING_MODEL',
       'AI_BUDDY_RAG_CHUNK_CHARS',
@@ -122,10 +163,24 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_MISTRAL_API_KEY',
       'AI_BUDDY_OCR_BACKEND',
       'AI_BUDDY_PADDLEOCR_API_URL',
+      'AI_BUDDY_KNOWLEDGE_MAX_FILES',
+      'AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS',
+      'AI_BUDDY_OCR_TIMEOUT_SECONDS',
       'AI_BUDDY_HTTP_MAX_RETRIES',
       'AI_BUDDY_MCP_MAX_RETRIES',
       'AI_BUDDY_COMPACTION_KEEP_MESSAGES',
       'AI_BUDDY_COMPACTION_MAX_MESSAGES',
+      'AI_BUDDY_AGENT_DURABILITY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS',
+      'AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS',
+      'AI_BUDDY_AGENT_FALLBACK_MODELS',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX',
       'AI_BUDDY_TYPESAFE_API_KEY',
       'AI_BUDDY_JEV_MODEL',
       'AI_BUDDY_JEV_INPUT_THRESHOLD',
@@ -135,7 +190,11 @@ describe('pickEditableAIConfigs', () => {
   it('splits search engine, RAG and runtime keys for tab saves', () => {
     expect(
       pickSearchEngineConfigs(allConfigRows).map((item) => item.key),
-    ).toEqual(['AI_BUDDY_EXA_API_KEY', 'AI_BUDDY_TAVILY_API_KEY']);
+    ).toEqual([
+      'AI_BUDDY_EXA_API_KEY',
+      'AI_BUDDY_TAVILY_API_KEY',
+      'AI_BUDDY_KEENABLE_API_KEY',
+    ]);
     expect(pickRagConfigs(allConfigRows).map((item) => item.key)).toEqual([
       'AI_BUDDY_EMBEDDING_BACKEND',
       'AI_BUDDY_ONNX_EMBEDDING_MODEL',
@@ -156,6 +215,13 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_MISTRAL_API_KEY',
       'AI_BUDDY_OCR_BACKEND',
       'AI_BUDDY_PADDLEOCR_API_URL',
+      'AI_BUDDY_KNOWLEDGE_MAX_FILES',
+      'AI_BUDDY_KNOWLEDGE_MAX_TOTAL_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_PDF_PAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_BYTES',
+      'AI_BUDDY_KNOWLEDGE_MAX_IMAGE_PIXELS',
+      'AI_BUDDY_OCR_TIMEOUT_SECONDS',
     ]);
     expect(pickRuntimeConfigs(allConfigRows).map((item) => item.key)).toEqual([
       'AI_BUDDY_AGENT_EXECUTION_BACKEND',
@@ -163,6 +229,13 @@ describe('pickEditableAIConfigs', () => {
       'AI_BUDDY_MCP_MAX_RETRIES',
       'AI_BUDDY_COMPACTION_KEEP_MESSAGES',
       'AI_BUDDY_COMPACTION_MAX_MESSAGES',
+      'AI_BUDDY_AGENT_DURABILITY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED',
+      'AI_BUDDY_AGENT_DURABILITY_RECOVERY_INTERVAL_SECONDS',
+      'AI_BUDDY_AGENT_DURABILITY_STALE_SECONDS',
+      'AI_BUDDY_AGENT_FALLBACK_MODELS',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED',
+      'AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_MAX',
     ]);
     expect(pickJevConfigs(allConfigRows).map((item) => item.key)).toEqual([
       'AI_BUDDY_TYPESAFE_API_KEY',
@@ -178,18 +251,31 @@ describe('pickEditableAIConfigs', () => {
       true,
     );
     expect(isEditableAIConfigKey('AI_BUDDY_EXA_API_KEY')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_KEENABLE_API_KEY')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_KNOWLEDGE_MAX_FILES')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_OCR_TIMEOUT_SECONDS')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_OCR_BACKEND')).toBe(true);
+    expect(isEditableAIConfigKey('AI_BUDDY_AGENT_FALLBACK_MODELS')).toBe(true);
+    expect(
+      isEditableAIConfigKey('AI_BUDDY_AGENT_DYNAMIC_SUBAGENTS_ENABLED'),
+    ).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_QDRANT_URL')).toBe(false);
     expect(isEditableAIConfigKey('AI_BUDDY_QDRANT_API_KEY')).toBe(false);
     expect(isEditableAIConfigKey('AI_BUDDY_HTTP_MAX_RETRIES')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_COMPACTION_KEEP_MESSAGES')).toBe(
       true,
     );
+    expect(isEditableAIConfigKey('AI_BUDDY_AGENT_DURABILITY_ENABLED')).toBe(
+      true,
+    );
+    expect(
+      isEditableAIConfigKey('AI_BUDDY_AGENT_DURABILITY_RECOVERY_ENABLED'),
+    ).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_DOCUMENT_EXTRACT_BACKEND')).toBe(
       true,
     );
     expect(isEditableAIConfigKey('AI_BUDDY_EMBEDDING_BACKEND')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_ONNX_EMBEDDING_MODEL')).toBe(true);
-    expect(isEditableAIConfigKey('AI_BUDDY_OCR_BACKEND')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_UNSTRUCTURED_API_KEY')).toBe(true);
     expect(isEditableAIConfigKey('AI_BUDDY_MARKITDOWN_DOCINTEL_ENDPOINT')).toBe(
       true,

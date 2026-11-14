@@ -5,6 +5,7 @@ import type { OnnxPickerContext } from './onnx-picker-context';
 import { computed, inject } from 'vue';
 
 import { VbenButton } from '@vben/common-ui';
+import { $t } from '@vben/locales';
 
 import {
   OCR_ONNX_PICKER_KEY,
@@ -18,6 +19,8 @@ const props = withDefaults(
     cacheDir?: string;
     disabled?: boolean;
     download?: (item: AIOnnxOption) => void;
+    /** 是否允许在当前位置下载模型，下载入口统一放在 AI 配置页面 */
+    downloadable?: boolean;
     downloading?: string;
     models?: AIOnnxOption[];
     modelValue?: string;
@@ -28,6 +31,7 @@ const props = withDefaults(
     cacheDir: '',
     disabled: false,
     download: undefined,
+    downloadable: true,
     downloading: '',
     modelValue: '',
     models: () => [],
@@ -67,13 +71,13 @@ function downloadModel(item: AIOnnxOption) {
 
 const selectedId = computed(() => props.value || props.modelValue || '');
 
-function selectModel(modelId: string) {
-  if (props.disabled) {
+function selectModel(item: AIOnnxOption) {
+  if (props.disabled || (!props.downloadable && !item.downloaded)) {
     return;
   }
-  emit('update:value', modelId);
-  emit('update:modelValue', modelId);
-  emit('change', modelId);
+  emit('update:value', item.id);
+  emit('update:modelValue', item.id);
+  emit('change', item.id);
 }
 
 function meta(item: AIOnnxOption) {
@@ -93,9 +97,14 @@ function meta(item: AIOnnxOption) {
     <div
       v-for="item in models"
       :key="item.id"
-      class="flex cursor-pointer items-center justify-between rounded-md border px-3 py-2"
-      :class="selectedId === item.id ? 'border-primary' : 'border-border'"
-      @click="selectModel(item.id)"
+      class="flex items-center justify-between rounded-md border px-3 py-2"
+      :class="[
+        selectedId === item.id ? 'border-primary' : 'border-border',
+        disabled || (!downloadable && !item.downloaded)
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer',
+      ]"
+      @click="selectModel(item)"
     >
       <div class="min-w-0">
         <div class="truncate text-sm">{{ item.name }}</div>
@@ -104,7 +113,7 @@ function meta(item: AIOnnxOption) {
         </div>
       </div>
       <VbenButton
-        v-if="!item.downloaded"
+        v-if="downloadable && !item.downloaded"
         size="sm"
         :disabled="disabled || Boolean(downloading)"
         :loading="downloading === item.id"
@@ -113,7 +122,10 @@ function meta(item: AIOnnxOption) {
         下载
       </VbenButton>
     </div>
-    <div v-if="cacheDir" class="text-muted-foreground text-xs">
+    <div v-if="!downloadable" class="text-muted-foreground text-xs">
+      {{ $t('ai-buddy.onnxDownloadHint') }}
+    </div>
+    <div v-if="downloadable && cacheDir" class="text-muted-foreground text-xs">
       保存目录 {{ cacheDir }}
     </div>
   </div>
