@@ -25,7 +25,7 @@ export function useKnowledgeColumns(
       field: 'seq',
       title: $t('common.table.id'),
       type: 'seq',
-      width: 50,
+      width: 60,
     },
     {
       field: 'name',
